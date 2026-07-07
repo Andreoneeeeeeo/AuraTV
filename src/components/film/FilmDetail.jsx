@@ -24,6 +24,7 @@ import { useBackHandler } from '../../hooks/useBackHandler.js';
 import { useAuth } from '../../contexts/AuthContext.jsx';
 import { fetchFullDetails } from '../../lib/tmdb.js';
 import { getCustomBanner } from '../../lib/customBanners.js';
+import { isAnimeTitle } from '../../lib/anilist.js';
 import { fmtDate } from '../../lib/format.js';
 import { translateTmdbError } from '../../lib/errors.js';
 import { getFilmWatchStatus } from '../../lib/watchStatus.js';
@@ -181,7 +182,13 @@ export default function FilmDetail({ film, apiKey, onClose, onSetWatchStatus, on
                 <CrewSection crew={details?.crew} />
                 <ImageGallery backdrops={details?.backdrops} />
                 <CastRow cast={details?.cast} />
-                <FavoriteCharacterSection mediaType="film" mediaId={film.id} cast={details?.cast} />
+                <FavoriteCharacterSection
+                  mediaType="film"
+                  mediaId={film.id}
+                  cast={details?.cast}
+                  title={film.title}
+                  isAnime={details ? isAnimeTitle({ genres: details.genres, originalLanguage: details.original_language }) : false}
+                />
                 <MediaRow title={t('detail.recommended')} items={details?.recommendations} mediaType="film" onOpen={onOpenRelated} />
                 <MediaRow title={t('detail.similar')} items={details?.similar} mediaType="film" onOpen={onOpenRelated} />
               </>

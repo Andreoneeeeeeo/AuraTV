@@ -207,6 +207,8 @@ export const en = {
     pickerTitle: 'Choose a character',
     saved: 'Favorite character saved.',
     removed: 'Favorite character removed.',
+    sourceAniList: 'Artwork from AniList',
+    sourceTmdbFallback: "Character not found on AniList: showing TMDB cast instead.",
   },
 
   customBanner: {

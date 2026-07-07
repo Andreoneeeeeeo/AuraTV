@@ -207,6 +207,8 @@ export const it = {
     pickerTitle: 'Scegli un personaggio',
     saved: 'Personaggio preferito salvato.',
     removed: 'Personaggio preferito rimosso.',
+    sourceAniList: 'Illustrazioni da AniList',
+    sourceTmdbFallback: 'Personaggio non trovato su AniList: mostro il cast TMDB.',
   },
 
   customBanner: {

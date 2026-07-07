@@ -29,6 +29,7 @@ import { fmtDate } from '../../lib/format.js';
 import { translateTmdbError } from '../../lib/errors.js';
 import { getShowWatchStatus, isShowCaughtUp } from '../../lib/watchStatus.js';
 import { getCustomBanner } from '../../lib/customBanners.js';
+import { isAnimeTitle } from '../../lib/anilist.js';
 
 export default function ShowDetail({
   show, apiKey, onClose, onToggleEpisode, onMarkUpTo, onSetSeasonWatched, onSetWatchStatus, onMarkAllWatched, onRewatch,
@@ -257,7 +258,13 @@ export default function ShowDetail({
                 <CrewSection crew={details?.crew} />
                 <ImageGallery backdrops={details?.backdrops} />
                 <CastRow cast={details?.cast} />
-                <FavoriteCharacterSection mediaType="show" mediaId={show.id} cast={details?.cast} />
+                <FavoriteCharacterSection
+                  mediaType="show"
+                  mediaId={show.id}
+                  cast={details?.cast}
+                  title={show.name}
+                  isAnime={details ? isAnimeTitle({ genres: details.genres, originalLanguage: details.original_language, originCountries: details.origin_country }) : false}
+                />
                 <MediaRow title={t('detail.recommended')} items={details?.recommendations} mediaType="show" onOpen={onOpenRelated} />
                 <MediaRow title={t('detail.similar')} items={details?.similar} mediaType="show" onOpen={onOpenRelated} />
               </>
