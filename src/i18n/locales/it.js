@@ -551,6 +551,12 @@ export const it = {
     tvtimeNoneMatched: 'Nessuna serie del file TvTime è stata trovata su TMDB.',
     tvtimeCompleted: 'Importazione da TvTime completata: {matched} serie abbinate e importate.',
     tvtimeCompletedWithSkipped: 'Importazione da TvTime completata: {matched} serie abbinate e importate, {skipped} non trovate su TMDB e saltate.',
+    tvtimeMoviesNoneMatched: 'Nessun film del file TvTime è stato trovato su TMDB.',
+    tvtimeMoviesCompleted: 'Importazione film da TvTime completata: {matched} film abbinati e importati.',
+    tvtimeMoviesCompletedWithSkipped: 'Importazione film da TvTime completata: {matched} film abbinati e importati, {skipped} non trovati su TMDB e saltati.',
+    tvtimeListsNoneMatched: 'Nessun elemento delle liste TvTime è stato trovato su TMDB.',
+    tvtimeListsCompleted: 'Importazione liste da TvTime completata: {matched} elementi abbinati e importati.',
+    tvtimeListsCompletedWithSkipped: 'Importazione liste da TvTime completata: {matched} elementi abbinati e importati, {skipped} non trovati su TMDB e saltati.',
   },
 
   games: {

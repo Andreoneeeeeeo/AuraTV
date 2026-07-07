@@ -626,6 +626,79 @@ export function useLibraryData({ apiKey, lang, t, setError, setImportProgress, o
     } catch (e) { setError(t('errors.csvReadFilmsFailed')); }
   }
 
+  async function resolveMovieTmdbId(item) {
+    const imdbId = item?.id?.imdb;
+    if (imdbId) {
+      try {
+        const found = await tmdb(`/find/${imdbId}?external_source=imdb_id`, apiKey, lang);
+        const match = found.movie_results && found.movie_results[0];
+        if (match) return match.id;
+      } catch (e) {}
+    }
+    const title = item.title || item.name;
+    if (!title) return null;
+    try {
+      const data = await tmdb(`/search/movie?query=${encodeURIComponent(title)}`, apiKey, lang);
+      const results = data.results || [];
+      if (item.year) {
+        const withYear = results.find(r => (r.release_date || '').slice(0, 4) === String(item.year));
+        if (withYear) return withYear.id;
+      }
+      return results[0]?.id || null;
+    } catch (e) { return null; }
+  }
+
+  async function importMoviesFromTvTime(arr) {
+    if (!apiKey) { setError(t('errors.tvtimeNeedsApiKey')); return; }
+    let next = { ...filmLibrary };
+    let matched = 0, skipped = 0;
+    const total = arr.length;
+    const touched = [];
+
+    for (let i = 0; i < arr.length; i++) {
+      const item = arr[i];
+      setImportProgress({ done: i, total, matched, skipped });
+      const tmdbId = await resolveMovieTmdbId(item);
+      if (!tmdbId) { skipped++; continue; }
+
+      if (!next[tmdbId]) {
+        try {
+          const data = await tmdb(`/movie/${tmdbId}?append_to_response=credits`, apiKey, lang);
+          next[tmdbId] = {
+            id: data.id, title: data.title, poster_path: data.poster_path,
+            release_date: data.release_date || '', runtime: data.runtime || 100,
+            genres: (data.genres || []).map(g => g.name),
+            directors: (data.credits?.crew || []).filter(c => c.job === 'Director').map(c => c.name),
+            topCast: (data.credits?.cast || []).slice(0, 5).map(c => c.name),
+            watched: false, watchedAt: null, watchStatus: 'planned', rewatchCount: 0, addedAt: Date.now(),
+          };
+        } catch (e) { skipped++; continue; }
+      }
+
+      const isWatched = !!item.is_watched;
+      next[tmdbId] = {
+        ...next[tmdbId],
+        watched: isWatched || next[tmdbId].watched,
+        watchedAt: item.watched_at ? new Date(item.watched_at).getTime() : next[tmdbId].watchedAt,
+        watchStatus: isWatched ? 'completed' : (next[tmdbId].watchStatus || 'planned'),
+        rewatchCount: Math.max(item.rewatch_count || 0, next[tmdbId].rewatchCount || 0),
+      };
+      touched.push(tmdbId);
+      matched++;
+    }
+
+    setImportProgress(null);
+    await persistFilmLibrary(next);
+    touched.forEach((id) => syncPublicFilm(next[id]));
+    if (matched === 0) {
+      setError(t('errors.tvtimeMoviesNoneMatched'));
+    } else if (skipped > 0) {
+      setError(t('errors.tvtimeMoviesCompletedWithSkipped', { matched, skipped }));
+    } else {
+      setError(t('errors.tvtimeMoviesCompleted', { matched }));
+    }
+  }
+
   function exportFilmsJSON() {
     downloadJSON(Object.values(filmLibrary), `film-${new Date().toISOString().slice(0, 10)}.json`);
   }
@@ -635,6 +708,14 @@ export function useLibraryData({ apiKey, lang, t, setError, setImportProgress, o
       const text = await file.text();
       const arr = JSON.parse(text);
       if (!Array.isArray(arr)) throw new Error('formato non valido');
+      if (arr.length === 0) { setError(t('errors.jsonNoValidFilms')); return; }
+
+      const looksLikeTvTime = arr[0] && arr[0].id && typeof arr[0].id === 'object';
+      if (looksLikeTvTime) {
+        await importMoviesFromTvTime(arr);
+        return;
+      }
+
       const next = { ...filmLibrary };
       let count = 0;
       arr.forEach(item => {
@@ -699,11 +780,112 @@ export function useLibraryData({ apiKey, lang, t, setError, setImportProgress, o
     downloadJSON(Object.values(lists), `liste-${new Date().toISOString().slice(0, 10)}.json`);
   }
 
+  async function importListsFromTvTime(arr) {
+    if (!apiKey) { setError(t('errors.tvtimeNeedsApiKey')); return; }
+    let nextLists = { ...lists };
+    let nextLibrary = { ...library };
+    let nextFilmLibrary = { ...filmLibrary };
+    let matched = 0, skipped = 0;
+    const totalItems = arr.reduce((sum, l) => sum + ((l.items || []).length), 0);
+    let done = 0;
+
+    for (const tvList of arr) {
+      const listId = 'list-' + Date.now() + '-' + Math.random().toString(36).slice(2, 7);
+      const listItems = [];
+
+      for (const it of (tvList.items || [])) {
+        setImportProgress({ done, total: totalItems, matched, skipped });
+        done++;
+
+        if (it.type === 'series') {
+          const tvdbId = it.tvdb_id;
+          if (!tvdbId) { skipped++; continue; }
+          let tmdbId = null;
+          try {
+            const found = await tmdb(`/find/${tvdbId}?external_source=tvdb_id`, apiKey, lang);
+            tmdbId = found.tv_results?.[0]?.id || null;
+          } catch (e) {}
+          if (!tmdbId) { skipped++; continue; }
+
+          if (!nextLibrary[tmdbId]) {
+            try {
+              const data = await tmdb(`/tv/${tmdbId}?append_to_response=credits`, apiKey, lang);
+              nextLibrary[tmdbId] = {
+                id: data.id, name: data.name, poster_path: data.poster_path, status: data.status,
+                first_air_date: data.first_air_date, episode_run_time: (data.episode_run_time && data.episode_run_time[0]) || 45,
+                number_of_episodes: data.number_of_episodes || 0,
+                genres: (data.genres || []).map(g => g.name),
+                creators: (data.created_by || []).map(c => c.name),
+                topCast: (data.credits?.cast || []).slice(0, 5).map(c => c.name),
+                seasons: (data.seasons || []).map(s => ({ season_number: s.season_number, episode_count: s.episode_count, name: s.name })),
+                watched: {}, watchStatus: 'planned', addedAt: Date.now(),
+              };
+            } catch (e) { skipped++; continue; }
+          }
+          listItems.push({ type: 'show', id: tmdbId });
+          matched++;
+        } else if (it.type === 'movie') {
+          let tmdbId = null;
+          try {
+            const data = await tmdb(`/search/movie?query=${encodeURIComponent(it.name || '')}`, apiKey, lang);
+            tmdbId = data.results?.[0]?.id || null;
+          } catch (e) {}
+          if (!tmdbId) { skipped++; continue; }
+
+          if (!nextFilmLibrary[tmdbId]) {
+            try {
+              const data = await tmdb(`/movie/${tmdbId}?append_to_response=credits`, apiKey, lang);
+              nextFilmLibrary[tmdbId] = {
+                id: data.id, title: data.title, poster_path: data.poster_path,
+                release_date: data.release_date || '', runtime: data.runtime || 100,
+                genres: (data.genres || []).map(g => g.name),
+                directors: (data.credits?.crew || []).filter(c => c.job === 'Director').map(c => c.name),
+                topCast: (data.credits?.cast || []).slice(0, 5).map(c => c.name),
+                watched: false, watchedAt: null, watchStatus: 'planned', rewatchCount: 0, addedAt: Date.now(),
+              };
+            } catch (e) { skipped++; continue; }
+          }
+          listItems.push({ type: 'film', id: tmdbId });
+          matched++;
+        } else {
+          skipped++;
+        }
+      }
+
+      nextLists[listId] = {
+        id: listId, name: (tvList.name || 'Lista TV Time').trim(), description: tvList.description || '',
+        tags: [], isPublic: false,
+        createdAt: tvList.created_at ? new Date(tvList.created_at).getTime() : Date.now(),
+        items: listItems,
+      };
+    }
+
+    setImportProgress(null);
+    await persistLibrary(nextLibrary);
+    await persistFilmLibrary(nextFilmLibrary);
+    await persistLists(nextLists);
+    if (matched === 0) {
+      setError(t('errors.tvtimeListsNoneMatched'));
+    } else if (skipped > 0) {
+      setError(t('errors.tvtimeListsCompletedWithSkipped', { matched, skipped }));
+    } else {
+      setError(t('errors.tvtimeListsCompleted', { matched }));
+    }
+  }
+
   async function importListsJSON(file) {
     try {
       const text = await file.text();
       const arr = JSON.parse(text);
       if (!Array.isArray(arr)) throw new Error('formato non valido');
+      if (arr.length === 0) { setError(t('errors.jsonNoValidLists')); return; }
+
+      const looksLikeTvTime = arr.some(l => Array.isArray(l.items) && l.items.some(it => it && it.tvdb_id !== undefined));
+      if (looksLikeTvTime) {
+        await importListsFromTvTime(arr);
+        return;
+      }
+
       const next = { ...lists };
       let count = 0;
       arr.forEach(l => {

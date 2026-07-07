@@ -551,6 +551,12 @@ export const en = {
     tvtimeNoneMatched: 'No shows from the TvTime file were found on TMDB.',
     tvtimeCompleted: 'TvTime import complete: {matched} shows matched and imported.',
     tvtimeCompletedWithSkipped: 'TvTime import complete: {matched} shows matched and imported, {skipped} not found on TMDB and skipped.',
+    tvtimeMoviesNoneMatched: 'No movies from the TvTime file were found on TMDB.',
+    tvtimeMoviesCompleted: 'TvTime movies import complete: {matched} movies matched and imported.',
+    tvtimeMoviesCompletedWithSkipped: 'TvTime movies import complete: {matched} movies matched and imported, {skipped} not found on TMDB and skipped.',
+    tvtimeListsNoneMatched: 'No items from the TvTime lists were found on TMDB.',
+    tvtimeListsCompleted: 'TvTime lists import complete: {matched} items matched and imported.',
+    tvtimeListsCompletedWithSkipped: 'TvTime lists import complete: {matched} items matched and imported, {skipped} not found on TMDB and skipped.',
   },
 
   games: {
