@@ -463,6 +463,7 @@ export const it = {
     showsTitle: 'Serie TV',
     filmsTitle: 'Film',
     noLibraryShows: 'Nessuna serie ancora.',
+    noLibraryGames: 'Nessun videogioco ancora.',
     noLibraryFilms: 'Nessun film ancora.',
   },
 

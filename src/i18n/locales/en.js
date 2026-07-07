@@ -463,6 +463,7 @@ export const en = {
     showsTitle: 'TV Shows',
     filmsTitle: 'Movies',
     noLibraryShows: 'No shows yet.',
+    noLibraryGames: 'No games yet.',
     noLibraryFilms: 'No movies yet.',
   },
 

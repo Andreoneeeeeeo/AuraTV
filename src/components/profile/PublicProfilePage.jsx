@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ChevronLeft, Users, Star, Lock, Loader2, Heart, Tv, Film } from 'lucide-react';
+import { ChevronLeft, Users, Star, Lock, Loader2, Heart, Tv, Film, Gamepad2 } from 'lucide-react';
 import Avatar from '../ui/Avatar.jsx';
 import Poster from '../shared/Poster.jsx';
 import FollowButton from './FollowButton.jsx';
@@ -113,6 +113,7 @@ export default function PublicProfilePage() {
   const isSelf = currentUser?.id === profile.id;
   const shows = publicLibrary.filter((i) => i.media_type === 'show');
   const films = publicLibrary.filter((i) => i.media_type === 'film');
+  const games = publicLibrary.filter((i) => i.media_type === 'game');
 
   return (
     <div className="fixed inset-0 z-20 overflow-y-auto" style={{ background: 'var(--bg)' }}>
@@ -171,6 +172,7 @@ export default function PublicProfilePage() {
                   { value: 'favorites', label: t('publicProfile.favoritesTitle') },
                   { value: 'shows', label: t('publicProfile.showsTitle') },
                   { value: 'films', label: t('publicProfile.filmsTitle') },
+                  { value: 'games', label: t('games.navLabel') },
                 ]}
               />
 
@@ -232,6 +234,21 @@ export default function PublicProfilePage() {
                       <div key={f.media_id}>
                         <Poster path={f.media_poster} fill alt={f.media_title} />
                         <p className="font-body text-xs mt-1.5 truncate">{f.media_title}</p>
+                      </div>
+                    ))}
+                  </div>
+                )
+              )}
+
+              {segment === 'games' && (
+                games.length === 0 ? (
+                  <EmptyState icon={Gamepad2} text={t('publicProfile.noLibraryGames')} />
+                ) : (
+                  <div className="grid grid-cols-3 sm:grid-cols-4 gap-3">
+                    {games.map((g) => (
+                      <div key={g.media_id}>
+                        <Poster path={g.media_poster} fill alt={g.media_title} />
+                        <p className="font-body text-xs mt-1.5 truncate">{g.media_title}</p>
                       </div>
                     ))}
                   </div>
