@@ -276,7 +276,7 @@ export const en = {
 
   settings: {
     title: 'Settings',
-    intro: 'This app uses TMDB (The Movie Database) for show and movie data. The API key is free and your data stays tied to your account.',
+    intro: 'This app uses TMDB (The Movie Database) for show and movie data. Your data stays tied to your account.',
     sectionAccount: 'Account',
     sectionProfile: 'Profile',
     sectionAppearance: 'Appearance',

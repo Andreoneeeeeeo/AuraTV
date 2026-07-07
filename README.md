@@ -47,6 +47,46 @@ Di default Supabase invia un'email di conferma quando qualcuno si registra. Per 
 
 ---
 
+## 0.1 Nascondi la chiave TMDB (una volta sola)
+
+L'app non chiede più a ciascun utente di inserire una propria chiave TMDB: tutte le richieste passano da una piccola funzione server ("Edge Function") che gira dentro il tuo stesso progetto Supabase, dove la chiave vera resta nascosta e non finisce mai nel codice pubblico su GitHub.
+
+Questa parte richiede il terminale del computer (non basta il browser), ma sono comandi da incollare, nessuna programmazione.
+
+**Cosa ti serve prima:**
+- [Node.js](https://nodejs.org) già installato (se hai seguito questa guida per le build, probabilmente ce l'hai già)
+- Una chiave API TMDB gratuita: vai su [themoviedb.org](https://www.themoviedb.org) → crea un account → **Impostazioni** → **API** → richiedi una chiave per uso "Developer" → copia la **"API Key (v3 auth)"**
+
+**Passaggi (dal terminale, dentro la cartella del progetto):**
+
+1. Installa la Supabase CLI (una volta sola sul tuo computer):
+   ```
+   npm install -g supabase
+   ```
+2. Accedi al tuo account Supabase (si apre il browser per il login):
+   ```
+   supabase login
+   ```
+3. Collega il progetto (dalla cartella di questo progetto, dove c'è già la cartella `supabase/`):
+   ```
+   supabase link --project-ref fmsduelqycnhcoawmtkp
+   ```
+   (`fmsduelqycnhcoawmtkp` è l'identificativo del tuo progetto Supabase — lo trovi anche nell'URL del progetto, es. `https://supabase.com/dashboard/project/fmsduelqycnhcoawmtkp`. Se in futuro cambi progetto Supabase, usa il nuovo identificativo qui.)
+4. Salva la tua chiave TMDB come segreto del server (**sostituisci** `LA-TUA-CHIAVE-TMDB` con quella vera):
+   ```
+   supabase secrets set TMDB_API_KEY=LA-TUA-CHIAVE-TMDB
+   ```
+5. Distribuisci la funzione:
+   ```
+   supabase functions deploy tmdb-proxy --no-verify-jwt
+   ```
+
+Fatto! Da ora l'app userà sempre questa funzione, senza che nessun utente debba inserire alcuna chiave. Se in futuro modifichi il file `supabase/functions/tmdb-proxy/index.ts`, ripeti solo il passaggio 5 per aggiornare la funzione online.
+
+> `--no-verify-jwt` serve perché questa funzione è pensata per essere chiamata pubblicamente (come TMDB stesso, i cui dati sono comunque pubblici); non espone nulla di privato — la sicurezza dei dati personali resta quella data dalle regole RLS del database, non da questa funzione.
+
+---
+
 ## 1. Metti il progetto su GitHub (una volta sola)
 
 1. Crea un account gratuito su [github.com](https://github.com) se non ce l'hai già

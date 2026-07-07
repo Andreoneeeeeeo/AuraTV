@@ -1,12 +1,21 @@
+import { SUPABASE_URL } from './supabaseConfig.js';
+
 const TMDB_LOCALE = { it: 'it-IT', en: 'en-US' };
+const TMDB_PROXY_URL = `${SUPABASE_URL}/functions/v1/tmdb-proxy`;
 
 export function tmdbLocale(lang) {
   return TMDB_LOCALE[lang] || TMDB_LOCALE.it;
 }
 
-export async function tmdb(path, apiKey, lang = 'it') {
+// Tutte le chiamate a TMDB passano da qui verso la Edge Function "tmdb-proxy":
+// la vera chiave API di TMDB non è mai presente nel codice dell'app, resta
+// solo lato server. Il secondo parametro (un tempo la chiave TMDB personale
+// dell'utente) non è più necessario ed è mantenuto solo per compatibilità
+// con le chiamate esistenti in giro per l'app.
+export async function tmdb(path, _unusedApiKey, lang = 'it') {
   const sep = path.includes('?') ? '&' : '?';
-  const res = await fetch(`https://api.themoviedb.org/3${path}${sep}api_key=${apiKey}&language=${tmdbLocale(lang)}`);
+  const fullPath = `${path}${sep}language=${tmdbLocale(lang)}`;
+  const res = await fetch(`${TMDB_PROXY_URL}?path=${encodeURIComponent(fullPath)}`);
   if (!res.ok) {
     if (res.status === 401) throw new Error('TMDB_INVALID_KEY');
     throw new Error('TMDB_ERROR_' + res.status);

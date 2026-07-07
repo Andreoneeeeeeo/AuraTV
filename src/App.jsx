@@ -4,7 +4,6 @@ import Header from './components/layout/Header.jsx';
 import BottomNav from './components/layout/BottomNav.jsx';
 import SideNav from './components/layout/SideNav.jsx';
 import Centered from './components/shared/Centered.jsx';
-import NoApiKey from './components/shared/NoApiKey.jsx';
 import LibraryTab from './components/tabs/LibraryTab.jsx';
 import DiscoverTab from './components/tabs/DiscoverTab.jsx';
 import GamesTab from './components/tabs/GamesTab.jsx';
@@ -40,7 +39,11 @@ export default function TVTracker() {
   const toast = useToast();
   const [celebrating, setCelebrating] = useState(false);
 
-  const [apiKey, setApiKeyState] = useState('');
+  // La chiave TMDB non è più personale: tutte le richieste passano dalla
+  // Edge Function "tmdb-proxy", che tiene la vera chiave nascosta lato
+  // server. Questo valore serve solo a mantenere invariata la forma delle
+  // funzioni esistenti (che un tempo richiedevano la chiave personale).
+  const [apiKey] = useState('shared-proxy');
   const [tab, setTab] = useState('library');
   const [ready, setReady] = useState(false);
   const [detailId, setDetailId] = useState(null);
@@ -61,10 +64,6 @@ export default function TVTracker() {
 
   useEffect(() => {
     (async () => {
-      try {
-        const s = await window.storage.get('tmdb-settings');
-        if (s?.value) setApiKeyState(JSON.parse(s.value).apiKey || '');
-      } catch (e) {}
       await data.loadAll();
       setReady(true);
     })();
@@ -79,20 +78,14 @@ export default function TVTracker() {
   }, [ready, data.ready, autoPauseMonths]);
 
   useEffect(() => {
-    if (!ready || !data.ready || !apiKey) return;
+    if (!ready || !data.ready) return;
     data.refreshOnAirShows();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [ready, data.ready, apiKey]);
+  }, [ready, data.ready]);
 
   function handleSetAutoPauseMonths(months) {
     setAutoPauseMonths(months);
     setAutoPauseMonthsState(months);
-  }
-
-  async function saveApiKey(key) {
-    setApiKeyState(key);
-    try { await window.storage.set('tmdb-settings', JSON.stringify({ apiKey: key })); }
-    catch (e) { setError(t('errors.saveApiKeyFailed')); }
   }
 
   const [previewShow, setPreviewShow] = useState(null);
@@ -158,7 +151,6 @@ export default function TVTracker() {
 
   function renderTab() {
     if (!ready || !data.ready) return <Centered><Loader2 className="animate-spin" size={28} /></Centered>;
-    if (!apiKey && tab !== 'profile' && tab !== 'games' && tab !== 'friends') return <NoApiKey onGo={() => setSettingsOpen(true)} />;
 
     if (tab === 'friends') {
       return <FriendsHubTab />;
@@ -312,7 +304,6 @@ export default function TVTracker() {
         <Suspense fallback={<ModalFallback />}>
           <SettingsPage
             onClose={() => setSettingsOpen(false)}
-            apiKey={apiKey} onSaveApiKey={saveApiKey}
             onExport={data.exportCSV} onImport={data.importCSV} onExportJSON={data.exportShowsJSON} onImportJSON={data.importShowsJSON} showCount={Object.keys(data.library).length}
             onExportFilms={data.exportFilmsCSV} onImportFilms={data.importFilmsCSV} onExportFilmsJSON={data.exportFilmsJSON} onImportFilmsJSON={data.importFilmsJSON} filmCount={Object.keys(data.filmLibrary).length}
             onExportLists={data.exportListsCSV} onImportLists={data.importListsCSV} onExportListsJSON={data.exportListsJSON} onImportListsJSON={data.importListsJSON} listCount={Object.keys(data.lists).length}

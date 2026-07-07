@@ -276,7 +276,7 @@ export const it = {
 
   settings: {
     title: 'Impostazioni',
-    intro: 'Questa app usa TMDB (The Movie Database) per i dati di serie e film. La chiave API è gratuita e i tuoi dati restano legati al tuo account.',
+    intro: 'Questa app usa TMDB (The Movie Database) per i dati di serie e film. I tuoi dati restano legati al tuo account.',
     sectionAccount: 'Account',
     sectionProfile: 'Profilo',
     sectionAppearance: 'Aspetto',

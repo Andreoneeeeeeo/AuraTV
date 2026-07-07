@@ -18,7 +18,7 @@ import { upsertProfile } from '../../lib/profiles.js';
 const APP_VERSION = '2.0.0';
 
 export default function SettingsPage({
-  onClose, apiKey, onSaveApiKey,
+  onClose,
   onExport, onImport, onExportJSON, onImportJSON, showCount,
   onExportFilms, onImportFilms, onExportFilmsJSON, onImportFilmsJSON, filmCount,
   onExportLists, onImportLists, onExportListsJSON, onImportListsJSON, listCount,
@@ -31,8 +31,6 @@ export default function SettingsPage({
   const toast = useToast();
 
   const [open, setOpen] = useState('account');
-  const [apiKeyValue, setApiKeyValue] = useState(apiKey);
-  const [apiSaved, setApiSaved] = useState(false);
   const [editingProfile, setEditingProfile] = useState(false);
   const [confirmLogout, setConfirmLogout] = useState(false);
   const [sendingReset, setSendingReset] = useState(false);
@@ -262,33 +260,6 @@ export default function SettingsPage({
                   </button>
                 ))}
               </div>
-            </div>
-            <label htmlFor="apiKey" className="font-mono text-xs" style={{ color: 'var(--muted)' }}>{t('settings.apiKeyLabel')}</label>
-            <input
-              id="apiKey"
-              value={apiKeyValue}
-              onChange={(e) => { setApiKeyValue(e.target.value); setApiSaved(false); }}
-              placeholder={t('settings.apiKeyPlaceholder')}
-              className="w-full mt-1.5 px-3 py-2.5 rounded-lg font-mono text-sm outline-none"
-              style={{ background: 'var(--surface-alt)', color: 'var(--text)', border: '1px solid var(--border)' }}
-            />
-            <button
-              onClick={() => { onSaveApiKey(apiKeyValue.trim()); setApiSaved(true); toast.success(t('toast.savedApiKey')); }}
-              className="btn-press mt-3 px-5 py-2 rounded-full font-body font-bold text-sm"
-              style={{ background: 'var(--amber)', color: 'var(--on-accent)' }}
-            >
-              {t('common.save')}
-            </button>
-            {apiSaved && <span className="ml-3 font-body text-sm" style={{ color: 'var(--watched)' }}>{t('common.saved')} ✓</span>}
-
-            <div className="mt-4 rounded-lg p-3" style={{ background: 'var(--surface-alt)' }}>
-              <p className="font-body text-xs font-semibold mb-2">{t('settings.apiKeyHelpTitle')}</p>
-              <ol className="font-body text-xs list-decimal pl-4" style={{ color: 'var(--muted)' }}>
-                <li>{t('settings.apiKeyStep1')}</li>
-                <li>{t('settings.apiKeyStep2')}</li>
-                <li>{t('settings.apiKeyStep3')}</li>
-                <li>{t('settings.apiKeyStep4')}</li>
-              </ol>
             </div>
 
             <p className="font-display text-lg mt-6 mb-1" style={{ letterSpacing: '0.04em' }}>{t('settings.backupTitle')}</p>

@@ -1,0 +1,6 @@
+# Configurazione minima per Supabase CLI, necessaria solo per distribuire
+# la funzione tmdb-proxy con "supabase functions deploy".
+# Non serve avviare Supabase in locale: questo file esiste solo perché la
+# CLI lo richiede per sapere a quale progetto riferirsi.
+
+project_id = "fmsduelqycnhcoawmtkp"
