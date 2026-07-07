@@ -1,0 +1,204 @@
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap');
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ============ DESIGN TOKENS ============ */
+:root[data-theme='dark'] {
+  --bg: #0B0C0E;
+  --surface: #15171B;
+  --surface-alt: #1D2025;
+  --surface-raised: #23262C;
+  --border: #2A2D33;
+  --text: #F0EDE6;
+  --muted: #8B8D92;
+  --tally: #E63946;
+  --tally-rgb: 230, 57, 70;
+  --amber: #F5C518;
+  --amber-rgb: 245, 197, 24;
+  --watched: #4A9B7F;
+  --watched-rgb: 74, 155, 127;
+  --danger-bg: #2A1416;
+  --danger-text: #FCA5A5;
+  --success-bg: #142A1E;
+  --success-text: #86EFAC;
+  --on-accent: #0B0C0E;
+  --overlay: rgba(0, 0, 0, 0.6);
+  --overlay-strong: rgba(0, 0, 0, 0.75);
+  --skeleton-base: #1D2025;
+  --skeleton-shine: rgba(255, 255, 255, 0.06);
+  color-scheme: dark;
+}
+
+:root[data-theme='light'] {
+  --bg: #F7F5F0;
+  --surface: #FFFFFF;
+  --surface-alt: #F0EEE7;
+  --surface-raised: #FFFFFF;
+  --border: #E3E0D8;
+  --text: #1C1B18;
+  --muted: #6B6D72;
+  --tally: #D62839;
+  --tally-rgb: 214, 40, 57;
+  --amber: #B8860B;
+  --amber-rgb: 184, 134, 11;
+  --watched: #2F8F68;
+  --watched-rgb: 47, 143, 104;
+  --danger-bg: #FDECEC;
+  --danger-text: #B91C1C;
+  --success-bg: #EAF7EF;
+  --success-text: #15803D;
+  --on-accent: #0B0C0E;
+  --overlay: rgba(20, 18, 14, 0.45);
+  --overlay-strong: rgba(20, 18, 14, 0.6);
+  --skeleton-base: #EDEBE3;
+  --skeleton-shine: rgba(0, 0, 0, 0.045);
+  color-scheme: light;
+}
+
+html, body, #root {
+  height: 100%;
+  margin: 0;
+  background: var(--bg);
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  transition: background 0.2s ease, color 0.2s ease;
+}
+
+/* ============ ACCESSIBILITY ============ */
+*:focus-visible {
+  outline: 2px solid var(--amber);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+button, a, [role='button'] {
+  min-height: 32px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px; height: 1px;
+  padding: 0; margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ============ SCROLLBAR ============ */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+button { -webkit-tap-highlight-color: transparent; }
+
+/* ============ FONTS ============ */
+.font-display { font-family: 'Bebas Neue', 'Inter', sans-serif; letter-spacing: 0.04em; }
+.font-mono { font-family: 'JetBrains Mono', monospace; }
+.font-body { font-family: 'Inter', sans-serif; }
+
+/* ============ MICRO-INTERACTIONS ============ */
+@keyframes tallyPulse {
+  0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(var(--tally-rgb), 0.5); }
+  50% { opacity: 0.5; box-shadow: 0 0 0 4px rgba(var(--tally-rgb), 0); }
+}
+.tally-dot { animation: tallyPulse 1.8s ease-in-out infinite; }
+
+.btn-press, .card-tap, .nav-btn, .episode-row, .season-card {
+  transition: transform 0.12s ease, opacity 0.12s ease, background 0.15s ease, box-shadow 0.15s ease;
+}
+.btn-press:active, .card-tap:active, .episode-row:active { transform: scale(0.97); opacity: 0.85; }
+.nav-btn:active { transform: scale(0.9); }
+.season-card { transition: box-shadow 0.2s ease; }
+.progress-fill { transition: width 0.5s cubic-bezier(0.22, 1, 0.36, 1); }
+.chevron { transition: transform 0.2s ease; }
+
+.modal-sheet { animation: sheetUp 0.25s cubic-bezier(0.22, 1, 0.36, 1); }
+@keyframes sheetUp { from { transform: translateY(24px); opacity: 0.6; } to { transform: translateY(0); opacity: 1; } }
+
+.confirm-pop { animation: popIn 0.18s cubic-bezier(0.22, 1, 0.36, 1); }
+@keyframes popIn { from { transform: scale(0.92); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+
+.fade-in { animation: fadeIn 0.2s ease; }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+.fade-slide-down { animation: fadeSlideDown 0.18s cubic-bezier(0.22, 1, 0.36, 1); }
+@keyframes fadeSlideDown { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: translateY(0); } }
+
+.toast-in { animation: toastIn 0.22s cubic-bezier(0.22, 1, 0.36, 1); }
+@keyframes toastIn { from { opacity: 0; transform: translateY(10px) scale(0.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
+
+.spin-slow { animation: spin 1s linear infinite; }
+@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+/* ============ SKELETON LOADING ============ */
+.skeleton {
+  position: relative;
+  overflow: hidden;
+  background: var(--skeleton-base);
+}
+.skeleton::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(90deg, transparent, var(--skeleton-shine), transparent);
+  animation: shimmer 1.5s infinite;
+}
+@keyframes shimmer { 100% { transform: translateX(100%); } }
+
+/* ============ ACCENT COLORS (personalizzazione) ============ */
+:root[data-theme='dark'][data-accent='crimson'] { --amber: #E63946; --amber-rgb: 230, 57, 70; --on-accent: #fff; }
+:root[data-theme='light'][data-accent='crimson'] { --amber: #C1121F; --amber-rgb: 193, 18, 31; --on-accent: #fff; }
+:root[data-theme='dark'][data-accent='ocean'] { --amber: #4EA8DE; --amber-rgb: 78, 168, 222; --on-accent: #0B0C0E; }
+:root[data-theme='light'][data-accent='ocean'] { --amber: #1D6FA3; --amber-rgb: 29, 111, 163; --on-accent: #fff; }
+:root[data-theme='dark'][data-accent='emerald'] { --amber: #52B788; --amber-rgb: 82, 183, 136; --on-accent: #0B0C0E; }
+:root[data-theme='light'][data-accent='emerald'] { --amber: #2D6A4F; --amber-rgb: 45, 106, 79; --on-accent: #fff; }
+:root[data-theme='dark'][data-accent='violet'] { --amber: #B197FC; --amber-rgb: 177, 151, 252; --on-accent: #0B0C0E; }
+:root[data-theme='light'][data-accent='violet'] { --amber: #6741D9; --amber-rgb: 103, 65, 217; --on-accent: #fff; }
+
+/* ============ TEXT SIZE (personalizzazione) ============ */
+:root[data-textsize='small'] { font-size: 14px; }
+:root[data-textsize='large'] { font-size: 17.5px; }
+
+/* ============ DESKTOP HOVER (solo dispositivi con mouse) ============ */
+@media (hover: hover) and (pointer: fine) {
+  .card-tap:hover { transform: translateY(-3px); }
+  .card-tap:hover img { filter: brightness(1.08); }
+  .btn-press:hover { filter: brightness(1.08); }
+  .episode-row:hover, .nav-btn:hover { background: var(--surface-alt) !important; }
+  .season-card:hover { box-shadow: 0 4px 14px rgba(0,0,0,0.3); }
+}
+.card-tap img { transition: filter 0.15s ease; }
+
+/* ============ CONFETTI (serie completata) ============ */
+.confetti-piece {
+  position: absolute;
+  top: -12px;
+  width: 9px;
+  height: 14px;
+  border-radius: 2px;
+  animation: confettiFall 2.6s cubic-bezier(0.25, 0.4, 0.45, 1) forwards;
+}
+@keyframes confettiFall {
+  0% { transform: translateY(0) rotate(0deg); opacity: 1; }
+  100% { transform: translateY(105vh) rotate(680deg); opacity: 0.7; }
+}
+
+/* ============ RESPONSIVE CONTAINER ============ */
+.app-shell {
+  min-height: 100vh;
+  background: var(--bg);
+  color: var(--text);
+}

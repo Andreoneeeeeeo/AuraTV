@@ -1,0 +1,25 @@
+{
+  "name": "AuraTV",
+  "short_name": "AuraTV",
+  "description": "Track film, serie TV e anime",
+  "start_url": "/Tv-Tracker/",
+  "scope": "/Tv-Tracker/",
+  "display": "standalone",
+  "background_color": "#0B0C0E",
+  "theme_color": "#0B0C0E",
+  "orientation": "any",
+  "icons": [
+    {
+      "src": "/Tv-Tracker/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/Tv-Tracker/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

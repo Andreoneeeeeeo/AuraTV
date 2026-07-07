@@ -1,0 +1,29 @@
+# Dipendenze
+node_modules/
+
+# Build web
+dist/
+
+# Build desktop (Electron)
+release/
+
+# Build iOS (rigenerato da 'npx cap sync ios' ad ogni build)
+ios/App/Pods/
+ios/App/build/
+ios/App/DerivedData/
+
+# File di sistema
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+.idea/
+
+# Log
+npm-debug.log*
+*.log
+
+# Variabili d'ambiente locali (se mai aggiunte in futuro)
+.env
+.env.local

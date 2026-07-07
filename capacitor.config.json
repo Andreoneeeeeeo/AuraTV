@@ -1,0 +1,8 @@
+{
+  "appId": "com.andrra.auratv",
+  "appName": "AuraTV",
+  "webDir": "dist",
+  "server": {
+    "androidScheme": "https"
+  }
+}
