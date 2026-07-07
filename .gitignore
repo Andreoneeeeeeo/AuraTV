@@ -16,6 +16,10 @@ ios/App/DerivedData/
 .DS_Store
 Thumbs.db
 
+# Cache locale della Supabase CLI (creata da 'supabase link'): informazioni
+# tecniche del tuo computer, nessun segreto — ma non serve condividerla
+supabase/.temp/
+
 # Editor
 .vscode/
 .idea/
