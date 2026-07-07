@@ -1,5 +1,7 @@
 import { Users, Tv, Search, User, Gamepad2 } from 'lucide-react';
+import { motion } from 'framer-motion';
 import { useI18n } from '../../i18n/index.jsx';
+import { hapticSelection } from '../../lib/haptics.js';
 
 export function useNavItems(showGames) {
   const { t } = useI18n();
@@ -13,8 +15,16 @@ export function useNavItems(showGames) {
   return items;
 }
 
+const SPRING = { type: 'spring', stiffness: 500, damping: 32, mass: 0.9 };
+
 export default function BottomNav({ tab, setTab, showGames }) {
   const items = useNavItems(showGames);
+
+  function handleTap(id) {
+    if (id !== tab) hapticSelection();
+    setTab(id);
+  }
+
   return (
     <nav
       aria-label="Navigazione principale"
@@ -22,31 +32,35 @@ export default function BottomNav({ tab, setTab, showGames }) {
       style={{ bottom: 'calc(10px + env(safe-area-inset-bottom, 0px))', zIndex: 20, paddingInline: 12 }}
     >
       <div
-        className="flex items-center gap-1 w-full"
-        style={{
-          maxWidth: 480, margin: '0 auto', padding: 6, borderRadius: 28,
-          background: 'color-mix(in srgb, var(--surface) 72%, transparent)',
-          backdropFilter: 'blur(22px) saturate(160%)',
-          WebkitBackdropFilter: 'blur(22px) saturate(160%)',
-          border: '1px solid color-mix(in srgb, var(--border) 70%, transparent)',
-          boxShadow: '0 8px 30px rgba(0,0,0,0.35)',
-        }}
+        className="glass-strong flex items-center gap-1 w-full"
+        style={{ maxWidth: 480, margin: '0 auto', padding: 6, borderRadius: 28, boxShadow: 'var(--shadow-lg)' }}
       >
         {items.map(({ id, icon: Icon, label }) => {
           const active = tab === id;
           return (
             <button
               key={id}
-              onClick={() => setTab(id)}
+              onClick={() => handleTap(id)}
               aria-current={active ? 'page' : undefined}
-              className="nav-btn flex-1 flex flex-col items-center gap-0.5 py-2 rounded-full"
-              style={{
-                background: active ? 'color-mix(in srgb, var(--amber) 18%, transparent)' : 'transparent',
-                transition: 'background 0.25s ease',
-              }}
+              className="relative flex-1 flex flex-col items-center gap-0.5 py-2 rounded-full"
+              style={{ WebkitTapHighlightColor: 'transparent' }}
             >
-              <Icon size={19} style={{ color: active ? 'var(--amber)' : 'var(--muted)' }} aria-hidden="true" />
-              <span className="font-mono" style={{ fontSize: 9, color: active ? 'var(--amber)' : 'var(--muted)' }}>{label}</span>
+              {active && (
+                <motion.div
+                  layoutId="bottomNavActivePill"
+                  transition={SPRING}
+                  className="absolute inset-0 rounded-full"
+                  style={{ background: 'color-mix(in srgb, var(--amber) 18%, transparent)' }}
+                />
+              )}
+              <motion.div
+                className="relative flex flex-col items-center gap-0.5"
+                animate={{ scale: active ? 1.08 : 1, y: active ? -1 : 0 }}
+                transition={SPRING}
+              >
+                <Icon size={19} style={{ color: active ? 'var(--amber)' : 'var(--muted)' }} aria-hidden="true" />
+                <span className="font-mono" style={{ fontSize: 9, color: active ? 'var(--amber)' : 'var(--muted)' }}>{label}</span>
+              </motion.div>
             </button>
           );
         })}

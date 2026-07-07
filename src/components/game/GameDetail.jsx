@@ -20,6 +20,7 @@ export default function GameDetail({
 }) {
   const { t } = useI18n();
   useBackHandler(onClose);
+  const [scrollY, setScrollY] = useState(0);
   const [tab, setTab] = useState('info');
   const [details, setDetails] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -46,8 +47,9 @@ export default function GameDetail({
   const subtitle = [year, (game.platforms || []).slice(0, 3).join(', ')].filter(Boolean).join(' · ');
 
   return (
-    <div className="fixed inset-0 z-20 overflow-y-auto" style={{ background: 'var(--bg)' }}>
+    <div className="fixed inset-0 z-20 overflow-y-auto" style={{ background: 'var(--bg)' }} onScroll={(e) => setScrollY(e.currentTarget.scrollTop)}>
       <DetailHero
+        scrollY={scrollY}
         backdropPath={game.background_image}
         title={game.name}
         subtitle={subtitle}

@@ -37,6 +37,7 @@ export default function ShowDetail({
 }) {
   const { t, lang } = useI18n();
   useBackHandler(onClose);
+  const [scrollY, setScrollY] = useState(0);
   const { user } = useAuth();
   const [tab, setTab] = useState('info');
   const [details, setDetails] = useState(null);
@@ -151,8 +152,9 @@ export default function ShowDetail({
   const subtitle = [seasonsLabel, details?.networks?.[0]?.name].filter(Boolean).join(' · ');
 
   return (
-    <div className="fixed inset-0 z-20 overflow-y-auto" style={{ background: 'var(--bg)' }}>
+    <div className="fixed inset-0 z-20 overflow-y-auto" style={{ background: 'var(--bg)' }} onScroll={(e) => setScrollY(e.currentTarget.scrollTop)}>
       <DetailHero
+        scrollY={scrollY}
         backdropPath={customBanner || details?.backdrop_path}
         title={show.name}
         subtitle={subtitle}

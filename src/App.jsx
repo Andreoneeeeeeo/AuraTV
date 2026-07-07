@@ -1,4 +1,4 @@
-import { useState, useEffect, lazy, Suspense } from 'react';
+import { useState, useEffect, useRef, lazy, Suspense } from 'react';
 import { Loader2, AlertCircle, X } from 'lucide-react';
 import Header from './components/layout/Header.jsx';
 import BottomNav from './components/layout/BottomNav.jsx';
@@ -52,6 +52,8 @@ export default function TVTracker() {
   const [error, setError] = useState('');
   const [importProgress, setImportProgress] = useState(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [mainScrolled, setMainScrolled] = useState(false);
+  const mainRef = useRef(null);
   const [autoPauseMonths, setAutoPauseMonthsState] = useState(getAutoPauseMonths);
 
   const data = useLibraryData({
@@ -82,6 +84,11 @@ export default function TVTracker() {
     data.refreshOnAirShows();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ready, data.ready]);
+
+  useEffect(() => {
+    if (mainRef.current) mainRef.current.scrollTop = 0;
+    setMainScrolled(false);
+  }, [tab]);
 
   function handleSetAutoPauseMonths(months) {
     setAutoPauseMonths(months);
@@ -194,7 +201,7 @@ export default function TVTracker() {
       <SideNav tab={tab} setTab={setTab} showGames={showGames} />
 
       <div className="flex-1 flex flex-col min-w-0">
-        <Header tab={tab} onOpenProfile={() => setTab('profile')} />
+        <Header tab={tab} onOpenProfile={() => setTab('profile')} scrolled={mainScrolled} />
 
         {error && (
           <div role="alert" className="fade-in flex items-center gap-2 px-4 py-2 text-sm" style={{ background: 'var(--danger-bg)', color: 'var(--danger-text)' }}>
@@ -221,7 +228,15 @@ export default function TVTracker() {
           </div>
         )}
 
-        <main className="flex-1 overflow-y-auto px-4 pb-24 md:pb-8 pt-4" style={{ maxWidth: 720, margin: '0 auto', width: '100%' }}>
+        <main
+          ref={mainRef}
+          className="flex-1 overflow-y-auto px-4 pb-24 md:pb-8 pt-4"
+          style={{ maxWidth: 720, margin: '0 auto', width: '100%' }}
+          onScroll={(e) => {
+            const isScrolled = e.currentTarget.scrollTop > 8;
+            setMainScrolled((prev) => (prev === isScrolled ? prev : isScrolled));
+          }}
+        >
           {renderTab()}
         </main>
 

@@ -39,6 +39,7 @@ function fmtCurrency(n, lang) {
 export default function FilmDetail({ film, apiKey, onClose, onSetWatchStatus, onRewatch, onRemove, onOpenRelated, lists, onCreateList, onToggleListMembership, setError, isPreview, onAddToLibrary }) {
   const { t, lang } = useI18n();
   useBackHandler(onClose);
+  const [scrollY, setScrollY] = useState(0);
   const { user } = useAuth();
   const [tab, setTab] = useState('info');
   const [details, setDetails] = useState(null);
@@ -73,8 +74,9 @@ export default function FilmDetail({ film, apiKey, onClose, onSetWatchStatus, on
   const subtitle = [`${film.runtime} ${t('common.minutes')}`, (details?.genres || []).map((g) => g.name).join(', ')].filter(Boolean).join(' · ');
 
   return (
-    <div className="fixed inset-0 z-20 overflow-y-auto" style={{ background: 'var(--bg)' }}>
+    <div className="fixed inset-0 z-20 overflow-y-auto" style={{ background: 'var(--bg)' }} onScroll={(e) => setScrollY(e.currentTarget.scrollTop)}>
       <DetailHero
+        scrollY={scrollY}
         backdropPath={customBanner || details?.backdrop_path}
         title={film.title}
         subtitle={subtitle}

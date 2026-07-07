@@ -1,28 +1,39 @@
 import { useState } from 'react';
+import { motion } from 'framer-motion';
 import { ChevronDown, MoreVertical, Trash2, Bookmark } from 'lucide-react';
 import { IMG_BACKDROP } from '../../lib/tmdb.js';
 import { useI18n } from '../../i18n/index.jsx';
 
-export default function DetailHero({ backdropPath, title, subtitle, onClose, onRemove, onAddToList, favoriteSlot, showAddToList = true, showRemove = true, extraMenuItems }) {
+export default function DetailHero({
+  backdropPath, title, subtitle, onClose, onRemove, onAddToList, favoriteSlot,
+  showAddToList = true, showRemove = true, extraMenuItems, scrollY = 0,
+}) {
   const { t } = useI18n();
   const [menuOpen, setMenuOpen] = useState(false);
+  const clampedScroll = Math.max(0, Math.min(scrollY, 260));
 
   return (
-    <div className="relative" style={{ height: 240, flexShrink: 0, background: 'var(--surface-alt)' }}>
+    <div className="relative overflow-hidden" style={{ height: 260, flexShrink: 0, background: 'var(--surface-alt)' }}>
       {backdropPath && (
-        <img
+        <motion.img
+          initial={{ opacity: 0, scale: 1.08 }}
+          animate={{ opacity: 1, scale: 1 + clampedScroll / 1400 }}
+          transition={{ opacity: { duration: 0.5, ease: [0.16, 1, 0.3, 1] }, scale: { duration: 0.1, ease: 'linear' } }}
           src={backdropPath.startsWith('http') ? backdropPath : `${IMG_BACKDROP}${backdropPath}`}
           alt=""
-          style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+          style={{
+            width: '100%', height: '100%', objectFit: 'cover',
+            transform: `translateY(${clampedScroll * 0.35}px)`,
+          }}
         />
       )}
-      <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, rgba(0,0,0,0.35) 0%, rgba(0,0,0,0.15) 35%, rgba(0,0,0,0.85) 100%)' }} />
+      <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, rgba(0,0,0,0.4) 0%, rgba(0,0,0,0.12) 32%, rgba(0,0,0,0.9) 100%)' }} />
 
       <button
         onClick={onClose}
         aria-label={t('common.close')}
-        className="btn-press absolute flex items-center justify-center"
-        style={{ top: 14, left: 14, width: 34, height: 34, borderRadius: '50%', background: 'rgba(0,0,0,0.5)' }}
+        className="btn-press glass absolute flex items-center justify-center"
+        style={{ top: 14, left: 14, width: 34, height: 34, borderRadius: '50%', background: 'rgba(0,0,0,0.45)' }}
       >
         <ChevronDown size={19} color="#fff" />
       </button>
@@ -35,8 +46,8 @@ export default function DetailHero({ backdropPath, title, subtitle, onClose, onR
             aria-label={t('header.moreActions')}
             aria-haspopup="menu"
             aria-expanded={menuOpen}
-            className="btn-press flex items-center justify-center"
-            style={{ width: 34, height: 34, borderRadius: '50%', background: 'rgba(0,0,0,0.5)' }}
+            className="btn-press glass flex items-center justify-center"
+            style={{ width: 34, height: 34, borderRadius: '50%', background: 'rgba(0,0,0,0.45)' }}
           >
             <MoreVertical size={18} color="#fff" />
           </button>
@@ -44,8 +55,8 @@ export default function DetailHero({ backdropPath, title, subtitle, onClose, onR
         {menuOpen && (
           <div
             role="menu"
-            className="fade-slide-down absolute right-0 mt-1 rounded-lg overflow-hidden z-10"
-            style={{ background: 'var(--surface-raised)', border: '1px solid var(--border)', minWidth: 190 }}
+            className="fade-slide-down glass-strong absolute right-0 mt-1 rounded-lg overflow-hidden z-10"
+            style={{ minWidth: 190, boxShadow: 'var(--shadow-md)' }}
           >
             {showAddToList && (
               <button
@@ -82,8 +93,14 @@ export default function DetailHero({ backdropPath, title, subtitle, onClose, onR
         )}
       </div>
 
-      <div className="absolute" style={{ left: 16, right: 16, bottom: 14 }}>
-        <h1 className="font-display text-3xl leading-tight" style={{ color: '#fff', textShadow: '0 2px 8px rgba(0,0,0,0.6)' }}>
+      <motion.div
+        initial={{ opacity: 0, y: 14 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4, delay: 0.08, ease: [0.16, 1, 0.3, 1] }}
+        className="absolute"
+        style={{ left: 16, right: 16, bottom: 14 }}
+      >
+        <h1 className="font-display text-3xl leading-tight" style={{ color: '#fff', textShadow: '0 2px 10px rgba(0,0,0,0.7)' }}>
           {title}
         </h1>
         {subtitle && (
@@ -91,7 +108,7 @@ export default function DetailHero({ backdropPath, title, subtitle, onClose, onR
             {subtitle}
           </p>
         )}
-      </div>
+      </motion.div>
     </div>
   );
 }
