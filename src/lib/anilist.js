@@ -27,8 +27,10 @@ const QUERY = `
 
 // Un titolo TV/film è considerato "anime" se è animazione E di origine/lingua
 // giapponese — evita di interrogare AniList per cartoni non giapponesi.
+// Usa l'ID del genere TMDB (16 = Animazione) invece del nome, perché il nome
+// cambia a seconda della lingua dell'app (es. "Animation" vs "Animazione").
 export function isAnimeTitle({ genres, originalLanguage, originCountries }) {
-  const isAnimation = (genres || []).some((g) => (typeof g === 'string' ? g : g.name) === 'Animation');
+  const isAnimation = (genres || []).some((g) => (typeof g === 'object' ? g.id === 16 : false));
   const isJapanese = originalLanguage === 'ja' || (originCountries || []).includes('JP');
   return isAnimation && isJapanese;
 }
