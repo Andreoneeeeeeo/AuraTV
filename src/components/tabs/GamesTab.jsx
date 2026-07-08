@@ -63,15 +63,22 @@ export default function GamesTab({ gameLibrary, onAdd, onOpen, onOpenRelated }) 
           <EmptyState icon={Gamepad2} text={t('games.emptyLibrary')} />
         ) : (
           sections.map((section) => (
-            <div key={section.key} className="mb-6">
-              <div className="flex items-center justify-between mb-3">
+            <div key={section.key} className="mb-7">
+              <div className="flex items-center gap-2 mb-3">
                 <SectionLabel text={section.label} />
-                <span className="font-mono text-xs" style={{ color: 'var(--muted)' }}>{section.games.length}</span>
+                <span
+                  className="font-mono flex items-center justify-center"
+                  style={{ fontSize: 10, color: 'var(--muted)', background: 'var(--surface-alt)', minWidth: 18, height: 18, borderRadius: 9, padding: '0 6px' }}
+                >
+                  {section.games.length}
+                </span>
               </div>
               <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3">
                 {section.games.map((g) => (
                   <button key={g.id} onClick={() => onOpen(g.id)} className="card-tap text-left">
-                    <Poster path={g.background_image} fill alt={g.name} />
+                    <div style={{ borderRadius: 10, overflow: 'hidden', boxShadow: 'var(--shadow-xs)' }}>
+                      <Poster path={g.background_image} fill alt={g.name} />
+                    </div>
                     <p className="font-body text-xs mt-1.5 truncate">{g.name}</p>
                   </button>
                 ))}

@@ -31,19 +31,24 @@ export default function FilmLibrary({ filmLibrary, onOpen }) {
   return (
     <div>
       {sections.map((section) => (
-        <div key={section.key} className="mb-6">
-          <div className="flex items-center justify-between mb-3">
+        <div key={section.key} className="mb-7">
+          <div className="flex items-center gap-2 mb-3">
             <SectionLabel text={section.label} />
-            <span className="font-mono text-xs" style={{ color: 'var(--muted)' }}>{section.films.length}</span>
+            <span
+              className="font-mono flex items-center justify-center"
+              style={{ fontSize: 10, color: 'var(--muted)', background: 'var(--surface-alt)', minWidth: 18, height: 18, borderRadius: 9, padding: '0 6px' }}
+            >
+              {section.films.length}
+            </span>
           </div>
           <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3">
             {section.films.map(film => (
               <button key={film.id} onClick={() => onOpen(film.id)} className="card-tap text-left">
-                <div className="relative">
+                <div className="relative" style={{ borderRadius: 10, overflow: 'hidden', boxShadow: 'var(--shadow-xs)' }}>
                   <Poster path={film.poster_path} fill alt={film.title} />
                   {film.watched && (
                     <span className="absolute flex items-center justify-center" style={{
-                      top: 6, right: 6, width: 20, height: 20, borderRadius: '50%', background: 'var(--watched)',
+                      top: 6, right: 6, width: 20, height: 20, borderRadius: '50%', background: 'var(--watched)', boxShadow: '0 2px 6px rgba(0,0,0,0.35)',
                     }}>
                       <Check size={12} color="var(--bg)" />
                     </span>

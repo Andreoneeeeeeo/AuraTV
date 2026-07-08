@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Tv, Loader2, AlertCircle, Globe } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '../../lib/supabaseClient.js';
 import { useI18n, LOCALES, SUPPORTED_LANGS } from '../../i18n/index.jsx';
 
@@ -73,19 +74,55 @@ export default function AuthScreen({ onAuthenticated }) {
   return (
     <div
       className="font-body fade-in"
-      style={{ background: 'var(--bg)', color: 'var(--text)', minHeight: '100vh', display: 'flex', flexDirection: 'column', justifyContent: 'center', padding: 24 }}
+      style={{
+        background: 'var(--bg)', color: 'var(--text)', minHeight: '100vh', display: 'flex', flexDirection: 'column',
+        justifyContent: 'center', padding: 24, position: 'relative', overflow: 'hidden',
+      }}
     >
-      <div style={{ maxWidth: 360, margin: '0 auto', width: '100%' }}>
+      <div
+        aria-hidden="true"
+        style={{
+          position: 'absolute', top: '-20%', left: '50%', transform: 'translateX(-50%)',
+          width: 480, height: 480, borderRadius: '50%', pointerEvents: 'none',
+          background: 'radial-gradient(circle, color-mix(in srgb, var(--amber) 16%, transparent), transparent 70%)',
+          filter: 'blur(10px)',
+        }}
+      />
+
+      <div style={{ maxWidth: 360, margin: '0 auto', width: '100%', position: 'relative' }}>
         <div className="flex justify-end mb-2">
           <LangSwitcher lang={lang} setLang={setLang} />
         </div>
 
         <div className="text-center mb-8">
-          <Tv size={40} style={{ color: 'var(--amber)', margin: '0 auto' }} aria-hidden="true" />
-          <h1 className="font-display text-4xl mt-3">AURATV</h1>
-          <p className="font-body text-sm mt-1" style={{ color: 'var(--muted)' }}>
-            {mode === 'login' ? t('auth.loginSubtitle') : mode === 'signup' ? t('auth.signupSubtitle') : t('auth.forgotPassword')}
-          </p>
+          <motion.div
+            initial={{ scale: 0.8, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ type: 'spring', stiffness: 260, damping: 20, delay: 0.05 }}
+            className="flex items-center justify-center mx-auto"
+            style={{
+              width: 76, height: 76, borderRadius: 22,
+              background: 'linear-gradient(145deg, color-mix(in srgb, var(--amber) 22%, var(--surface)), var(--surface))',
+              border: '1px solid color-mix(in srgb, var(--amber) 25%, var(--border))',
+              boxShadow: 'var(--shadow-amber)',
+            }}
+          >
+            <Tv size={34} style={{ color: 'var(--amber)' }} aria-hidden="true" />
+          </motion.div>
+          <h1 className="font-display text-4xl mt-4">AURATV</h1>
+          <AnimatePresence mode="wait">
+            <motion.p
+              key={mode}
+              initial={{ opacity: 0, y: -4 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 4 }}
+              transition={{ duration: 0.18 }}
+              className="font-body text-sm mt-1.5"
+              style={{ color: 'var(--muted)' }}
+            >
+              {mode === 'login' ? t('auth.loginSubtitle') : mode === 'signup' ? t('auth.signupSubtitle') : t('auth.forgotPassword')}
+            </motion.p>
+          </AnimatePresence>
         </div>
 
         {error && (
@@ -153,7 +190,7 @@ export default function AuthScreen({ onAuthenticated }) {
             type="submit"
             disabled={loading}
             className="btn-press mt-2 py-3 rounded-full font-body font-bold text-sm flex items-center justify-center gap-2"
-            style={{ background: 'var(--amber)', color: 'var(--on-accent)', opacity: loading ? 0.7 : 1 }}
+            style={{ background: 'var(--amber)', color: 'var(--on-accent)', opacity: loading ? 0.7 : 1, boxShadow: 'var(--shadow-amber)' }}
           >
             {loading && <Loader2 className="animate-spin" size={16} />}
             {mode === 'login' ? t('auth.loginCta') : mode === 'signup' ? t('auth.signupCta') : t('common.confirm')}

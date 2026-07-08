@@ -40,16 +40,27 @@ export default function SeriesLibrary({ library, watchedCountForShow, onOpen }) 
   return (
     <div>
       <div className="flex justify-end mb-3">
-        <button onClick={() => setView(v => v === 'grid' ? 'list' : 'grid')} aria-label={t('library.toggleView')} className="btn-press p-2 rounded-lg" style={{ background: 'var(--surface)' }}>
-          {view === 'grid' ? <List size={16} style={{ color: 'var(--muted)' }} /> : <LayoutGrid size={16} style={{ color: 'var(--muted)' }} />}
+        <button
+          onClick={() => setView(v => v === 'grid' ? 'list' : 'grid')}
+          aria-label={t('library.toggleView')}
+          className="btn-press flex items-center gap-1.5 px-3 py-1.5 rounded-full font-mono"
+          style={{ background: 'var(--surface)', border: '1px solid var(--border)', fontSize: 11, color: 'var(--muted)' }}
+        >
+          {view === 'grid' ? <List size={14} /> : <LayoutGrid size={14} />}
+          {view === 'grid' ? t('library.viewList') : t('library.viewGrid')}
         </button>
       </div>
 
       {sections.map((section) => (
-        <div key={section.key} className="mb-6">
-          <div className="flex items-center justify-between mb-3">
+        <div key={section.key} className="mb-7">
+          <div className="flex items-center gap-2 mb-3">
             <SectionLabel text={section.label} />
-            <span className="font-mono text-xs" style={{ color: 'var(--muted)' }}>{section.shows.length}</span>
+            <span
+              className="font-mono flex items-center justify-center"
+              style={{ fontSize: 10, color: 'var(--muted)', background: 'var(--surface-alt)', minWidth: 18, height: 18, borderRadius: 9, padding: '0 6px' }}
+            >
+              {section.shows.length}
+            </span>
           </div>
 
           {view === 'grid' ? (
@@ -61,7 +72,7 @@ export default function SeriesLibrary({ library, watchedCountForShow, onOpen }) 
                 const onAir = show.status === 'Returning Series';
                 return (
                   <button key={show.id} onClick={() => onOpen(show.id)} className="card-tap text-left">
-                    <div className="relative">
+                    <div className="relative" style={{ borderRadius: 10, overflow: 'hidden', boxShadow: 'var(--shadow-xs)' }}>
                       <Poster path={show.poster_path} fill alt={show.name} />
                       {onAir && (
                         <span className="tally-dot absolute" style={{
@@ -69,7 +80,8 @@ export default function SeriesLibrary({ library, watchedCountForShow, onOpen }) 
                           boxShadow: '0 0 0 2px rgba(0,0,0,0.5)',
                         }} aria-hidden="true" />
                       )}
-                      <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 4, background: 'rgba(0,0,0,0.5)' }}>
+                      <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 26, background: 'linear-gradient(180deg, transparent, rgba(0,0,0,0.55))', pointerEvents: 'none' }} />
+                      <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 4, background: 'rgba(255,255,255,0.18)' }}>
                         <div className="progress-fill" style={{ height: '100%', width: `${pct}%`, background: pct >= 100 ? 'var(--watched)' : 'var(--amber)' }} />
                       </div>
                     </div>
@@ -88,7 +100,7 @@ export default function SeriesLibrary({ library, watchedCountForShow, onOpen }) 
                 const onAir = show.status === 'Returning Series';
                 return (
                   <button key={show.id} onClick={() => onOpen(show.id)} className="card-tap flex gap-3 items-center text-left p-2.5 rounded-xl"
-                    style={{ background: 'var(--surface)', boxShadow: '0 2px 8px rgba(0,0,0,0.25)' }}>
+                    style={{ background: 'var(--surface)', border: '1px solid var(--border)', boxShadow: 'var(--shadow-xs)' }}>
                     <Poster path={show.poster_path} w={52} alt={show.name} />
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-1.5">

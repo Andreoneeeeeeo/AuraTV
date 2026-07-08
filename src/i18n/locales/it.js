@@ -94,6 +94,8 @@ export const it = {
     listEmptyItems: 'Lista vuota. Apri una serie o un film e tocca "Aggiungi a lista".',
     newListPlaceholder: 'Nome nuova lista...',
     toggleView: 'Cambia visualizzazione',
+    viewList: 'Lista',
+    viewGrid: 'Griglia',
     onAir: 'in onda',
     ended: 'conclusa',
     watchedOf: '{watched}/{total} episodi',

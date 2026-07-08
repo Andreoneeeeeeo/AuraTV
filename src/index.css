@@ -258,6 +258,17 @@ button { -webkit-tap-highlight-color: transparent; }
 :root[data-textsize='small'] { font-size: 14px; }
 :root[data-textsize='large'] { font-size: 17.5px; }
 
+/* ============ FOCUS (accessibilità + rifinitura, vale per tutta l'app) ============ */
+input:focus-visible, textarea:focus-visible, select:focus-visible {
+  outline: none;
+  border-color: var(--amber) !important;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--amber) 22%, transparent);
+}
+button:focus-visible, a:focus-visible {
+  outline: 2px solid var(--amber);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
 /* ============ DESKTOP HOVER (solo dispositivi con mouse) ============ */
 @media (hover: hover) and (pointer: fine) {
   .card-tap:hover { transform: translateY(-4px) scale(1.015); box-shadow: var(--shadow-md); }

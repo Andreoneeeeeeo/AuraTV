@@ -94,6 +94,8 @@ export const en = {
     listEmptyItems: 'Empty list. Open a show or movie and tap "Add to list".',
     newListPlaceholder: 'New list name...',
     toggleView: 'Toggle view',
+    viewList: 'List',
+    viewGrid: 'Grid',
     onAir: 'on air',
     ended: 'ended',
     watchedOf: '{watched}/{total} episodes',
