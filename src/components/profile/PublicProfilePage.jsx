@@ -271,10 +271,10 @@ function BackButton({ onBack, overlay }) {
     <button
       onClick={onBack}
       aria-label="Indietro"
-      className="btn-press flex items-center justify-center absolute"
+      className="btn-press glass flex items-center justify-center absolute"
       style={{
-        top: 14, left: 14, width: 34, height: 34, borderRadius: '50%',
-        background: overlay ? 'rgba(0,0,0,0.5)' : 'var(--surface)', zIndex: 5,
+        top: 'calc(14px + env(safe-area-inset-top, 0px))', left: 14, width: 34, height: 34, borderRadius: '50%',
+        background: overlay ? 'rgba(0,0,0,0.4)' : 'var(--surface)', zIndex: 5,
       }}
     >
       <ChevronLeft size={19} color={overlay ? '#fff' : 'var(--text)'} />

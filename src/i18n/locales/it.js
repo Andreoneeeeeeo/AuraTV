@@ -358,7 +358,10 @@ export const it = {
     aboutMadeWith: 'Realizzata con cura per chi ama serie TV e film.',
 
     supportContact: 'Hai un problema o un suggerimento?',
-    supportContactDesc: 'Scrivi una recensione, apri una segnalazione o contatta lo sviluppatore dal repository del progetto.',
+    supportContactDesc: 'Scrivi qui sotto: il messaggio arriva direttamente allo sviluppatore.',
+    feedbackPlaceholder: 'Descrivi il problema o il suggerimento...',
+    feedbackSend: 'Invia',
+    feedbackSent: 'Messaggio inviato, grazie della segnalazione!',
   },
 
   profile: {

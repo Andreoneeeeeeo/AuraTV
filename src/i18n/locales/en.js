@@ -358,7 +358,10 @@ export const en = {
     aboutMadeWith: 'Made with care for people who love shows and movies.',
 
     supportContact: 'Found a bug or have a suggestion?',
-    supportContactDesc: 'Leave feedback or reach the developer through the project repository.',
+    supportContactDesc: 'Write below: your message goes straight to the developer.',
+    feedbackPlaceholder: 'Describe the issue or suggestion...',
+    feedbackSend: 'Send',
+    feedbackSent: 'Message sent, thanks for the feedback!',
   },
 
   profile: {

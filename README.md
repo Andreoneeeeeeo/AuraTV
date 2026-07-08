@@ -87,6 +87,29 @@ Fatto! Da ora l'app userà sempre questa funzione, senza che nessun utente debba
 
 ---
 
+## 0.2 Ricevi via email le segnalazioni degli utenti (facoltativo)
+
+In Impostazioni → Supporto, gli utenti possono scriverti un messaggio che arriva direttamente alla tua email, tramite **Resend** (gratuito, 3.000 email/mese, nessuna carta di credito richiesta).
+
+1. Crea un account gratuito su [resend.com](https://resend.com)
+2. Vai su **API Keys** → **Create API Key** → copia la chiave (inizia con `re_`)
+3. Nella cartella del progetto, dal terminale (dopo aver già fatto `supabase login` e `supabase link` come sopra):
+   ```
+   supabase secrets set RESEND_API_KEY=LA-TUA-CHIAVE-RESEND
+   supabase secrets set FEEDBACK_TO_EMAIL=tua-email@esempio.com
+   ```
+   (`FEEDBACK_TO_EMAIL` è l'indirizzo a cui vuoi ricevere le segnalazioni — di solito la stessa email con cui ti sei registrato su Resend)
+4. Distribuisci la funzione:
+   ```
+   supabase functions deploy send-feedback
+   ```
+
+Da ora ogni messaggio scritto nel modulo di supporto ti arriverà via email. Nessuna configurazione ulteriore lato utente: la funzione richiede solo che chi scrive sia un utente già loggato nell'app, per evitare spam.
+
+> Non serve verificare un dominio: le email vengono inviate dall'indirizzo di test di Resend (`onboarding@resend.dev`) esclusivamente verso la tua casella — è l'unico uso consentito senza verifica, e coincide esattamente con questo caso d'uso.
+
+---
+
 ## 1. Metti il progetto su GitHub (una volta sola)
 
 1. Crea un account gratuito su [github.com](https://github.com) se non ce l'hai già

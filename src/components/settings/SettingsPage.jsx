@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import {
-  X, User, Palette, Globe, Bell, Shield, Lock, Database, Info, LifeBuoy, LogOut, Loader2,
+  X, User, Palette, Globe, Bell, Shield, Lock, Database, Info, LifeBuoy, LogOut, Loader2, Send, CheckCircle2,
 } from 'lucide-react';
 import SettingsSection from './SettingsSection.jsx';
 import { useBackHandler } from '../../hooks/useBackHandler.js';
@@ -14,6 +14,7 @@ import { useAuth } from '../../contexts/AuthContext.jsx';
 import { useToast } from '../../contexts/ToastContext.jsx';
 import { supabase } from '../../lib/supabaseClient.js';
 import { upsertProfile } from '../../lib/profiles.js';
+import { sendFeedback } from '../../lib/feedback.js';
 
 const APP_VERSION = '2.0.0';
 
@@ -278,7 +279,8 @@ export default function SettingsPage({
 
           <SettingsSection icon={LifeBuoy} title={t('settings.sectionSupport')} isOpen={open === 'support'} onToggle={() => toggleSection('support')}>
             <p className="font-body text-sm font-semibold mb-1">{t('settings.supportContact')}</p>
-            <p className="font-body text-xs" style={{ color: 'var(--muted)' }}>{t('settings.supportContactDesc')}</p>
+            <p className="font-body text-xs mb-3" style={{ color: 'var(--muted)' }}>{t('settings.supportContactDesc')}</p>
+            <FeedbackForm />
           </SettingsSection>
         </div>
       </div>
@@ -308,5 +310,60 @@ function ToggleRow({ label, desc, checked, onChange, last }) {
       </div>
       <ToggleSwitch checked={!!checked} onChange={onChange} label={label} />
     </div>
+  );
+}
+
+function FeedbackForm() {
+  const { t } = useI18n();
+  const { user, profile } = useAuth();
+  const [message, setMessage] = useState('');
+  const [sending, setSending] = useState(false);
+  const [sent, setSent] = useState(false);
+
+  async function handleSubmit(e) {
+    e.preventDefault();
+    if (!message.trim() || sending) return;
+    setSending(true);
+    try {
+      await sendFeedback(message.trim(), profile?.username || profile?.display_name, user?.email);
+      setSent(true);
+      setMessage('');
+    } catch (e) {
+      setSent(false);
+    }
+    setSending(false);
+  }
+
+  if (sent) {
+    return (
+      <div className="fade-in flex items-center gap-2 px-3 py-2.5 rounded-lg" style={{ background: 'var(--success-bg)', color: 'var(--success-text)' }}>
+        <CheckCircle2 size={16} />
+        <span className="font-body text-sm">{t('settings.feedbackSent')}</span>
+      </div>
+    );
+  }
+
+  return (
+    <form onSubmit={handleSubmit}>
+      <label htmlFor="feedback-message" className="sr-only">{t('settings.feedbackPlaceholder')}</label>
+      <textarea
+        id="feedback-message"
+        value={message}
+        onChange={(e) => setMessage(e.target.value.slice(0, 4000))}
+        placeholder={t('settings.feedbackPlaceholder')}
+        rows={4}
+        className="w-full px-3 py-2.5 rounded-lg font-body text-sm outline-none resize-none"
+        style={{ background: 'var(--surface-alt)', color: 'var(--text)', border: '1px solid var(--border)' }}
+      />
+      <button
+        type="submit"
+        disabled={!message.trim() || sending}
+        className="btn-press mt-3 flex items-center gap-2 px-5 py-2.5 rounded-full font-body font-bold text-sm"
+        style={{ background: 'var(--amber)', color: 'var(--on-accent)', opacity: (!message.trim() || sending) ? 0.6 : 1 }}
+      >
+        {sending ? <Loader2 size={15} className="animate-spin" /> : <Send size={15} />}
+        {t('settings.feedbackSend')}
+      </button>
+    </form>
   );
 }

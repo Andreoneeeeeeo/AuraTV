@@ -33,12 +33,12 @@ export default function DetailHero({
         onClick={onClose}
         aria-label={t('common.close')}
         className="btn-press glass absolute flex items-center justify-center"
-        style={{ top: 14, left: 14, width: 34, height: 34, borderRadius: '50%', background: 'rgba(0,0,0,0.45)' }}
+        style={{ top: 'calc(14px + env(safe-area-inset-top, 0px))', left: 14, width: 34, height: 34, borderRadius: '50%', background: 'rgba(0,0,0,0.4)' }}
       >
         <ChevronDown size={19} color="#fff" />
       </button>
 
-      <div className="absolute flex items-center gap-2" style={{ top: 14, right: 14 }}>
+      <div className="absolute flex items-center gap-2" style={{ top: 'calc(14px + env(safe-area-inset-top, 0px))', right: 14 }}>
         {favoriteSlot}
         {(showAddToList || showRemove || (extraMenuItems || []).length > 0) && (
           <button
@@ -47,7 +47,7 @@ export default function DetailHero({
             aria-haspopup="menu"
             aria-expanded={menuOpen}
             className="btn-press glass flex items-center justify-center"
-            style={{ width: 34, height: 34, borderRadius: '50%', background: 'rgba(0,0,0,0.45)' }}
+            style={{ width: 34, height: 34, borderRadius: '50%', background: 'rgba(0,0,0,0.4)' }}
           >
             <MoreVertical size={18} color="#fff" />
           </button>
