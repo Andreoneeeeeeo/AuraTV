@@ -607,4 +607,16 @@ export const it = {
     statsFavoritePlatform: 'Piattaforma preferita',
     statsFavoriteGenre: 'Genere preferito',
   },
+
+  tvtimePrompt: {
+    deadline: 'TV Time chiude il 15 luglio 2026',
+    title: 'Vieni da TV Time?',
+    body: 'Dopo quella data i tuoi dati spariscono per sempre, senza possibilità di recupero. Ecco come portarli qui in pochi minuti:',
+    step1: 'Installa l\'estensione gratuita "TV Time Out" per Chrome (link qui sotto)',
+    step2: 'Apri app.tvtime.com, accedi e tocca "Esporta i miei dati" nell\'estensione',
+    step3: 'Torna qui, vai in Impostazioni → Dati e carica i file scaricati',
+    cta: 'Apri TV Time Out (estensione)',
+    goToImport: 'Ho già i file, importa ora',
+    dismiss: 'Non uso TV Time',
+  },
 };

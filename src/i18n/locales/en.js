@@ -607,4 +607,16 @@ export const en = {
     statsFavoritePlatform: 'Favorite platform',
     statsFavoriteGenre: 'Favorite genre',
   },
+
+  tvtimePrompt: {
+    deadline: 'TV Time shuts down July 15, 2026',
+    title: 'Coming from TV Time?',
+    body: 'After that date your data is gone for good, with no way to recover it. Here\'s how to bring it here in a few minutes:',
+    step1: 'Install the free "TV Time Out" extension for Chrome (link below)',
+    step2: 'Open app.tvtime.com, sign in, and tap "Export my data" in the extension',
+    step3: 'Come back here, go to Settings → Data, and upload the downloaded files',
+    cta: 'Open TV Time Out (extension)',
+    goToImport: 'I already have the files, import now',
+    dismiss: "I don't use TV Time",
+  },
 };

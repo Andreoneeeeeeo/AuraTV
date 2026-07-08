@@ -10,6 +10,8 @@ import GamesTab from './components/tabs/GamesTab.jsx';
 import FriendsHubTab from './components/friends/FriendsHubTab.jsx';
 import ProfilePage from './components/profile/ProfilePage.jsx';
 import GamesOnboarding from './components/onboarding/GamesOnboarding.jsx';
+import TvTimeImportPrompt from './components/onboarding/TvTimeImportPrompt.jsx';
+import { hasSeenTvTimePrompt, markTvTimePromptSeen } from './lib/tvTimePrompt.js';
 import ConfettiBurst from './components/ui/ConfettiBurst.jsx';
 import { useToast } from './contexts/ToastContext.jsx';
 import { useAuth } from './contexts/AuthContext.jsx';
@@ -54,6 +56,7 @@ export default function TVTracker() {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [mainScrolled, setMainScrolled] = useState(false);
   const mainRef = useRef(null);
+  const [showTvTimePrompt, setShowTvTimePrompt] = useState(() => !hasSeenTvTimePrompt());
   const [autoPauseMonths, setAutoPauseMonthsState] = useState(getAutoPauseMonths);
 
   const data = useLibraryData({
@@ -152,6 +155,16 @@ export default function TVTracker() {
       await refreshProfile();
       if (answer) setTab('games');
     } catch (e) {}
+  }
+
+  function dismissTvTimePrompt() {
+    markTvTimePromptSeen();
+    setShowTvTimePrompt(false);
+  }
+
+  function goToImportFromTvTimePrompt() {
+    dismissTvTimePrompt();
+    setSettingsOpen(true);
   }
 
   const detailShow = detailId ? (data.library[detailId] || previewShow) : null;
@@ -256,8 +269,12 @@ export default function TVTracker() {
 
       {celebrating && <ConfettiBurst onDone={() => setCelebrating(false)} />}
 
-      {profile && profile.tracks_games === null && (
-        <GamesOnboarding onAnswer={handleGamesOnboardingAnswer} />
+      {showTvTimePrompt ? (
+        <TvTimeImportPrompt onOpenSettings={goToImportFromTvTimePrompt} onDismiss={dismissTvTimePrompt} />
+      ) : (
+        profile && profile.tracks_games === null && (
+          <GamesOnboarding onAnswer={handleGamesOnboardingAnswer} />
+        )
       )}
 
       {detailShow && (
