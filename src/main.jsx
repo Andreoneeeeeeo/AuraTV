@@ -9,6 +9,7 @@ import { ThemeProvider, useTheme } from './theme/ThemeContext.jsx';
 import { ToastProvider } from './contexts/ToastContext.jsx';
 import { AuthProvider, useAuth } from './contexts/AuthContext.jsx';
 import { triggerTopBackHandler, handleGlobalPopState } from './lib/backHandlerStack.js';
+import GlassFilters from './lib/liquidGlass/GlassFilters.tsx';
 
 import ToastStack from './components/ui/ToastStack.jsx';
 import LanguageOnboarding from './components/onboarding/LanguageOnboarding.jsx';
@@ -112,6 +113,7 @@ function Root() {
 function Providers() {
   return (
     <HashRouter>
+      <GlassFilters />
       <ThemeProvider>
         <I18nProvider>
           <ToastProvider>

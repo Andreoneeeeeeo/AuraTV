@@ -1,5 +1,6 @@
 import { Users, Tv, Search, User, Gamepad2 } from 'lucide-react';
 import { motion } from 'framer-motion';
+import LiquidGlass from '../../lib/liquidGlass/LiquidGlass.tsx';
 import { useI18n } from '../../i18n/index.jsx';
 import { hapticSelection } from '../../lib/haptics.js';
 
@@ -31,9 +32,12 @@ export default function BottomNav({ tab, setTab, showGames }) {
       className="fixed left-0 right-0 flex justify-center md:hidden"
       style={{ bottom: 'calc(10px + env(safe-area-inset-bottom, 0px))', zIndex: 20, paddingInline: 12 }}
     >
-      <div
-        className="glass-strong flex items-center gap-1 w-full"
-        style={{ maxWidth: 480, margin: '0 auto', padding: 6, borderRadius: 28, boxShadow: 'var(--shadow-lg)' }}
+      <LiquidGlass
+        variant="nav"
+        floating
+        intensity={0.9}
+        className="flex items-center gap-1 w-full"
+        style={{ maxWidth: 480, margin: '0 auto', padding: 6 }}
       >
         {items.map(({ id, icon: Icon, label }) => {
           const active = tab === id;
@@ -64,7 +68,7 @@ export default function BottomNav({ tab, setTab, showGames }) {
             </button>
           );
         })}
-      </div>
+      </LiquidGlass>
     </nav>
   );
 }

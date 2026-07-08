@@ -222,7 +222,20 @@ button { -webkit-tap-highlight-color: transparent; }
   background: linear-gradient(90deg, transparent, var(--skeleton-shine), transparent);
   animation: shimmer 1.5s infinite;
 }
+/* ============ LIQUID GLASS ENGINE (vedi src/lib/liquidGlass) ============ */
 @keyframes shimmer { 100% { transform: translateX(100%); } }
+
+.liquid-glass__noise {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.025;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+  background-size: 180px 180px;
+}
+.liquid-glass--floating { box-shadow: var(--shadow-lg); }
+.liquid-glass--nav, .liquid-glass--pill, .liquid-glass--fab { border-radius: 999px; }
 
 /* ============ EMPTY STATE ============ */
 @keyframes breathe {
