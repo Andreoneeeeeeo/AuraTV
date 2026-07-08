@@ -81,7 +81,7 @@ const LiquidGlass = forwardRef<HTMLDivElement, LiquidGlassProps>(function Liquid
       {...glass.pressHandlers}
       {...glass.dragProps}
       onClick={onClick}
-      className={`liquid-glass liquid-glass--${variant} ${floating ? 'liquid-glass--floating' : ''} ${className}`}
+      className={`liquid-glass liquid-glass--${variant} ${floating ? 'liquid-glass--floating' : ''}`}
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: 8, transition: { duration: 0.18, ease: EASE_OUT_EXPO } }}
@@ -140,7 +140,7 @@ const LiquidGlass = forwardRef<HTMLDivElement, LiquidGlassProps>(function Liquid
         <div aria-hidden="true" className="liquid-glass__noise" />
       )}
 
-      <div style={{ position: 'relative', zIndex: 1 }}>{children}</div>
+      <div className={className} style={{ position: 'relative', zIndex: 1 }}>{children}</div>
     </motion.div>
   );
 });
