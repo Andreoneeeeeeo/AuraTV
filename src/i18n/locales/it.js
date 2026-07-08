@@ -362,6 +362,7 @@ export const it = {
     feedbackPlaceholder: 'Descrivi il problema o il suggerimento...',
     feedbackSend: 'Invia',
     feedbackSent: 'Messaggio inviato, grazie della segnalazione!',
+    syncSaveFailed: 'Salvata solo su questo dispositivo: non sono riuscito a sincronizzarla sul tuo account. Controlla di aver eseguito tutti gli script SQL più recenti.',
   },
 
   profile: {

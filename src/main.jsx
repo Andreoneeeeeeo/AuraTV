@@ -8,7 +8,7 @@ import { I18nProvider, useI18n } from './i18n/index.jsx';
 import { ThemeProvider, useTheme } from './theme/ThemeContext.jsx';
 import { ToastProvider } from './contexts/ToastContext.jsx';
 import { AuthProvider, useAuth } from './contexts/AuthContext.jsx';
-import { triggerTopBackHandler } from './lib/backHandlerStack.js';
+import { triggerTopBackHandler, handleGlobalPopState } from './lib/backHandlerStack.js';
 
 import ToastStack from './components/ui/ToastStack.jsx';
 import LanguageOnboarding from './components/onboarding/LanguageOnboarding.jsx';
@@ -16,12 +16,25 @@ import AuthScreen from './components/auth/AuthScreen.jsx';
 import PublicProfilePage from './components/profile/PublicProfilePage.jsx';
 import App from './App.jsx';
 
-function AndroidBackButton() {
+// Collega il sistema di chiusura "a stack" (useBackHandler) sia al tasto
+// fisico Indietro di Android (nativo, via Capacitor) sia al tasto/gesto
+// Indietro del browser — quest'ultimo copre il web normale e le PWA
+// installate, dove non esiste alcun bridge nativo.
+function BackNavigationBridge() {
   const navigate = useNavigate();
   const location = useLocation();
   const locationRef = useRef(location);
   locationRef.current = location;
 
+  // Web / PWA: il tasto o gesto Indietro del browser genera un evento
+  // "popstate", che intercettiamo per chiudere la schermata più recente.
+  useEffect(() => {
+    window.addEventListener('popstate', handleGlobalPopState);
+    return () => window.removeEventListener('popstate', handleGlobalPopState);
+  }, []);
+
+  // Android nativo: il tasto fisico Indietro non genera un "popstate" del
+  // browser, va intercettato separatamente tramite il bridge di Capacitor.
   useEffect(() => {
     let listenerHandle;
     let cancelled = false;
@@ -86,7 +99,7 @@ function Root() {
 
   return (
     <>
-      <AndroidBackButton />
+      <BackNavigationBridge />
       <ProfileSync />
       <Routes>
         <Route path="/profile/:username" element={<PublicProfilePage />} />

@@ -103,7 +103,7 @@ export default function TVTracker() {
   function handleSetAutoPauseMonths(months) {
     setAutoPauseMonths(months);
     setAutoPauseMonthsState(months);
-    if (user) upsertProfile(user.id, { auto_pause_months: months }).catch(() => {});
+    if (user) upsertProfile(user.id, { auto_pause_months: months }).catch(() => toast.error(t('settings.syncSaveFailed')));
   }
 
   const [previewShow, setPreviewShow] = useState(null);

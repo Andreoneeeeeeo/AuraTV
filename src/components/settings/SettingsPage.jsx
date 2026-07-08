@@ -66,12 +66,12 @@ export default function SettingsPage({
 
   async function handleAccentChange(next) {
     setAccent(next);
-    if (user) upsertProfile(user.id, { accent_color: next }).catch(() => {});
+    if (user) upsertProfile(user.id, { accent_color: next }).catch(() => toast.error(t('settings.syncSaveFailed')));
   }
 
   async function handleTextSizeChange(next) {
     setTextSize(next);
-    if (user) upsertProfile(user.id, { text_size: next }).catch(() => {});
+    if (user) upsertProfile(user.id, { text_size: next }).catch(() => toast.error(t('settings.syncSaveFailed')));
   }
 
   async function handleLangChange(next) {
