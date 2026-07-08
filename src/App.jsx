@@ -90,9 +90,20 @@ export default function TVTracker() {
     setMainScrolled(false);
   }, [tab]);
 
+  const autoPauseSynced = useRef(false);
+  useEffect(() => {
+    if (!profile || autoPauseSynced.current) return;
+    autoPauseSynced.current = true;
+    if (profile.auto_pause_months !== null && profile.auto_pause_months !== undefined) {
+      setAutoPauseMonths(profile.auto_pause_months);
+      setAutoPauseMonthsState(profile.auto_pause_months);
+    }
+  }, [profile]);
+
   function handleSetAutoPauseMonths(months) {
     setAutoPauseMonths(months);
     setAutoPauseMonthsState(months);
+    if (user) upsertProfile(user.id, { auto_pause_months: months }).catch(() => {});
   }
 
   const [previewShow, setPreviewShow] = useState(null);

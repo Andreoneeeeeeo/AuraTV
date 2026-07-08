@@ -53,7 +53,7 @@ function AndroidBackButton() {
 function ProfileSync() {
   const { profile } = useAuth();
   const { setLang } = useI18n();
-  const { setMode } = useTheme();
+  const { setMode, setAccent, setTextSize } = useTheme();
   const synced = useRef(false);
 
   useEffect(() => {
@@ -61,7 +61,9 @@ function ProfileSync() {
     synced.current = true;
     if (profile.language) setLang(profile.language);
     if (profile.theme) setMode(profile.theme);
-  }, [profile, setLang, setMode]);
+    if (profile.accent_color) setAccent(profile.accent_color);
+    if (profile.text_size) setTextSize(profile.text_size);
+  }, [profile, setLang, setMode, setAccent, setTextSize]);
 
   return null;
 }

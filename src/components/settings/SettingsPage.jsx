@@ -64,6 +64,16 @@ export default function SettingsPage({
     if (user) upsertProfile(user.id, { theme: next }).catch(() => {});
   }
 
+  async function handleAccentChange(next) {
+    setAccent(next);
+    if (user) upsertProfile(user.id, { accent_color: next }).catch(() => {});
+  }
+
+  async function handleTextSizeChange(next) {
+    setTextSize(next);
+    if (user) upsertProfile(user.id, { text_size: next }).catch(() => {});
+  }
+
   async function handleLangChange(next) {
     setLang(next);
     toast.success(t('toast.languageUpdated'));
@@ -151,7 +161,7 @@ export default function SettingsPage({
                   role="radio"
                   aria-checked={accent === a}
                   aria-label={t(`settings.accent${a.charAt(0).toUpperCase() + a.slice(1)}`)}
-                  onClick={() => setAccent(a)}
+                  onClick={() => handleAccentChange(a)}
                   className="btn-press"
                   style={{
                     width: 32, height: 32, borderRadius: '50%', background: ACCENT_PREVIEW[a],
@@ -170,7 +180,7 @@ export default function SettingsPage({
               ].map((opt) => (
                 <button
                   key={opt.value}
-                  onClick={() => setTextSize(opt.value)}
+                  onClick={() => handleTextSizeChange(opt.value)}
                   className="btn-press flex-1 py-2 rounded-lg font-body text-xs font-semibold"
                   style={{ background: textSize === opt.value ? 'var(--amber)' : 'var(--surface-alt)', color: textSize === opt.value ? 'var(--on-accent)' : 'var(--text)' }}
                 >
