@@ -29,8 +29,9 @@ export default function Header({ tab, onOpenProfile, scrolled }) {
         backgroundImage: !scrolled ? `radial-gradient(120% 100% at 15% 0%, rgba(var(--amber-rgb), 0.10), transparent 60%)` : 'none',
         backdropFilter: scrolled ? 'blur(20px) saturate(180%)' : 'none',
         WebkitBackdropFilter: scrolled ? 'blur(20px) saturate(180%)' : 'none',
+        paddingTop: 'calc(20px + env(safe-area-inset-top, 0px))',
       }}
-      className="px-4 pt-5 pb-3 sticky top-0 z-10"
+      className="px-4 pb-3 sticky top-0 z-10"
     >
       <div className="flex items-center justify-between" style={{ maxWidth: 720, margin: '0 auto' }}>
         <div>

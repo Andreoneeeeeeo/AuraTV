@@ -28,6 +28,28 @@ jobs:
       - name: Sync Capacitor
         run: npx cap sync ios
 
+      - name: Apply AuraTV app icon
+        working-directory: ios/App/App/Assets.xcassets/AppIcon.appiconset
+        run: |
+          python3 - << 'PYEOF'
+          import json, subprocess, os
+
+          with open('Contents.json') as f:
+              data = json.load(f)
+
+          master = os.path.join(os.environ['GITHUB_WORKSPACE'], 'build', 'icon-master.png')
+
+          for img in data['images']:
+              filename = img.get('filename')
+              if not filename:
+                  continue
+              size_pt = float(img['size'].split('x')[0])
+              scale = float(img['scale'].replace('x', ''))
+              px = int(round(size_pt * scale))
+              subprocess.run(['sips', '-z', str(px), str(px), master, '--out', filename], check=True)
+              print(f"{filename}: {px}x{px}")
+          PYEOF
+
       - name: Install CocoaPods
         working-directory: ios/App
         run: pod install
