@@ -8,6 +8,7 @@ import { upsertPublicLibraryItem, removePublicLibraryItem } from '../lib/publicL
 import { upsertPublicList, removePublicList } from '../lib/publicLists.js';
 import { getShowWatchStatus, getFilmWatchStatus, getGameWatchStatus } from '../lib/watchStatus.js';
 import { fetchGameDetails, gameGenres, gamePlatforms, gameDevelopers, gamePublishers } from '../lib/rawg.js';
+import { parseTvTimeGdprZip } from '../lib/tvtimeGdprParser.js';
 
 export function useLibraryData({ apiKey, lang, t, setError, setImportProgress, onShowCompleted, userId }) {
   const [library, setLibrary] = useState({});
@@ -95,6 +96,7 @@ export function useLibraryData({ apiKey, lang, t, setError, setImportProgress, o
         watched: {},
         watchStatus: 'watching',
         addedAt: Date.now(),
+        tmdbSyncedAt: Date.now(),
       };
       await persistLibrary({ ...library, [entry.id]: entry });
       syncPublicShow(entry);
@@ -234,6 +236,64 @@ export function useLibraryData({ apiKey, lang, t, setError, setImportProgress, o
     if (Object.keys(updates).length > 0) bulkUpdateShows(updates);
   }
 
+  // TMDB richiede che i dati usati con la chiave gratuita non restino in
+  // cache per più di 6 mesi senza un ricontrollo. Ad ogni avvio aggiorniamo
+  // solo un piccolo gruppo di voci "scadute" (non tutte insieme, per non
+  // sovraccaricare l'API): con l'uso normale dell'app, nell'arco di poche
+  // settimane l'intera libreria viene ricontrollata senza che l'utente se
+  // ne accorga.
+  async function refreshStaleTmdbCache() {
+    if (!apiKey) return;
+    const SIX_MONTHS = 183 * 24 * 60 * 60 * 1000;
+    const cutoff = Date.now() - SIX_MONTHS;
+    const isStale = (entry) => !entry.tmdbSyncedAt || entry.tmdbSyncedAt < cutoff;
+
+    const staleShows = Object.values(library).filter(isStale).slice(0, 5);
+    const staleFilms = Object.values(filmLibrary).filter(isStale).slice(0, 5);
+    if (staleShows.length === 0 && staleFilms.length === 0) return;
+
+    const showUpdates = {};
+    for (const show of staleShows) {
+      try {
+        const data = await tmdb(`/tv/${show.id}?append_to_response=credits`, apiKey, lang);
+        showUpdates[show.id] = {
+          ...show,
+          name: data.name, poster_path: data.poster_path, status: data.status,
+          first_air_date: data.first_air_date, number_of_episodes: data.number_of_episodes || show.number_of_episodes,
+          genres: (data.genres || []).map(g => g.name),
+          creators: (data.created_by || []).map(c => c.name),
+          topCast: (data.credits?.cast || []).slice(0, 5).map(c => c.name),
+          seasons: (data.seasons || []).map(s => ({ season_number: s.season_number, episode_count: s.episode_count, name: s.name })),
+          tmdbSyncedAt: Date.now(),
+        };
+      } catch (e) {
+        showUpdates[show.id] = { ...show, tmdbSyncedAt: Date.now() }; // evita di ritentare all'infinito se il titolo non esiste più
+      }
+    }
+    if (Object.keys(showUpdates).length > 0) bulkUpdateShows(showUpdates);
+
+    const filmUpdates = {};
+    for (const film of staleFilms) {
+      try {
+        const data = await tmdb(`/movie/${film.id}?append_to_response=credits`, apiKey, lang);
+        filmUpdates[film.id] = {
+          ...film,
+          title: data.title, poster_path: data.poster_path, release_date: data.release_date || film.release_date,
+          runtime: data.runtime || film.runtime,
+          genres: (data.genres || []).map(g => g.name),
+          directors: (data.credits?.crew || []).filter(c => c.job === 'Director').map(c => c.name),
+          topCast: (data.credits?.cast || []).slice(0, 5).map(c => c.name),
+          tmdbSyncedAt: Date.now(),
+        };
+      } catch (e) {
+        filmUpdates[film.id] = { ...film, tmdbSyncedAt: Date.now() };
+      }
+    }
+    if (Object.keys(filmUpdates).length > 0) {
+      await persistFilmLibrary({ ...filmLibrary, ...filmUpdates });
+    }
+  }
+
   function rewatchShow(showId) {
     const show = library[showId];
     if (!show) return;
@@ -265,6 +325,7 @@ export function useLibraryData({ apiKey, lang, t, setError, setImportProgress, o
         watchStatus: 'planned',
         rewatchCount: 0,
         addedAt: Date.now(),
+        tmdbSyncedAt: Date.now(),
       };
       await persistFilmLibrary({ ...filmLibrary, [entry.id]: entry });
       syncPublicFilm(entry);
@@ -873,6 +934,126 @@ export function useLibraryData({ apiKey, lang, t, setError, setImportProgress, o
     }
   }
 
+  async function importTvTimeGdprZip(file) {
+    if (!apiKey) { setError(t('errors.tvtimeNeedsApiKey')); return; }
+    let parsed;
+    try {
+      parsed = await parseTvTimeGdprZip(file);
+    } catch (e) {
+      setError(t('errors.tvtimeGdprBadFile'));
+      return;
+    }
+
+    let nextLibrary = { ...library };
+    let nextLists = { ...lists };
+    const tvdbToTmdb = {};
+    let matchedShows = 0, skippedShows = 0;
+    const totalSteps = parsed.shows.length + parsed.lists.length;
+    let done = 0;
+
+    for (const show of parsed.shows) {
+      setImportProgress({ done, total: totalSteps, matched: matchedShows, skipped: skippedShows });
+      done++;
+
+      let tmdbId = null;
+      try {
+        const found = await tmdb(`/find/${show.tvdbId}?external_source=tvdb_id`, apiKey, lang);
+        tmdbId = found.tv_results?.[0]?.id || null;
+      } catch (e) {}
+      if (!tmdbId) { skippedShows++; continue; }
+      tvdbToTmdb[show.tvdbId] = tmdbId;
+
+      if (!nextLibrary[tmdbId]) {
+        try {
+          const data = await tmdb(`/tv/${tmdbId}?append_to_response=credits`, apiKey, lang);
+          nextLibrary[tmdbId] = {
+            id: data.id, name: data.name, poster_path: data.poster_path, status: data.status,
+            first_air_date: data.first_air_date, episode_run_time: (data.episode_run_time && data.episode_run_time[0]) || 45,
+            number_of_episodes: data.number_of_episodes || 0,
+            genres: (data.genres || []).map(g => g.name),
+            creators: (data.created_by || []).map(c => c.name),
+            topCast: (data.credits?.cast || []).slice(0, 5).map(c => c.name),
+            seasons: (data.seasons || []).map(s => ({ season_number: s.season_number, episode_count: s.episode_count, name: s.name })),
+            watched: {}, watchStatus: null, addedAt: Date.now(),
+          };
+        } catch (e) { skippedShows++; continue; }
+      }
+
+      const entry = nextLibrary[tmdbId];
+      const nextWatched = { ...entry.watched };
+      const logEntries = [];
+      let lastAt = entry.lastWatchedAt || 0;
+      for (const ep of show.episodes) {
+        const set = new Set(nextWatched[ep.season] || []);
+        if (!set.has(ep.episode)) {
+          set.add(ep.episode);
+          nextWatched[ep.season] = Array.from(set);
+          logEntries.push({ type: 'episode', mediaId: tmdbId, season: ep.season, episode: ep.episode, at: ep.at, runtime: entry.episode_run_time || 45 });
+          if (ep.at > lastAt) lastAt = ep.at;
+        }
+      }
+      nextLibrary[tmdbId] = {
+        ...entry,
+        watched: nextWatched,
+        rewatchCount: Math.max(entry.rewatchCount || 0, show.rewatchCount || 0),
+        lastWatchedAt: lastAt || entry.lastWatchedAt,
+      };
+      if (logEntries.length) logWatchEvents(logEntries);
+      matchedShows++;
+    }
+
+    let matchedListItems = 0;
+    for (const l of parsed.lists) {
+      setImportProgress({ done, total: totalSteps, matched: matchedShows, skipped: skippedShows });
+      done++;
+      const items = [];
+      for (const tvdbId of l.seriesTvdbIds) {
+        let tmdbId = tvdbToTmdb[tvdbId];
+        if (!tmdbId) {
+          try {
+            const found = await tmdb(`/find/${tvdbId}?external_source=tvdb_id`, apiKey, lang);
+            tmdbId = found.tv_results?.[0]?.id || null;
+          } catch (e) {}
+        }
+        if (!tmdbId) continue;
+        tvdbToTmdb[tvdbId] = tmdbId;
+        if (!nextLibrary[tmdbId]) {
+          try {
+            const data = await tmdb(`/tv/${tmdbId}?append_to_response=credits`, apiKey, lang);
+            nextLibrary[tmdbId] = {
+              id: data.id, name: data.name, poster_path: data.poster_path, status: data.status,
+              first_air_date: data.first_air_date, episode_run_time: (data.episode_run_time && data.episode_run_time[0]) || 45,
+              number_of_episodes: data.number_of_episodes || 0,
+              genres: (data.genres || []).map(g => g.name),
+              creators: (data.created_by || []).map(c => c.name),
+              topCast: (data.credits?.cast || []).slice(0, 5).map(c => c.name),
+              seasons: (data.seasons || []).map(s => ({ season_number: s.season_number, episode_count: s.episode_count, name: s.name })),
+              watched: {}, watchStatus: null, addedAt: Date.now(),
+            };
+          } catch (e) { continue; }
+        }
+        items.push({ type: 'show', id: tmdbId });
+        matchedListItems++;
+      }
+      if (items.length === 0) continue;
+      const listId = 'list-' + Date.now() + '-' + Math.random().toString(36).slice(2, 7);
+      nextLists[listId] = {
+        id: listId, name: l.name, description: l.description, tags: [], isPublic: l.isPublic,
+        createdAt: l.createdAt, items,
+      };
+    }
+
+    setImportProgress(null);
+    await persistLibrary(nextLibrary);
+    await persistLists(nextLists);
+
+    if (matchedShows === 0 && matchedListItems === 0) {
+      setError(t('errors.tvtimeGdprNoneMatched'));
+    } else {
+      setError(t('errors.tvtimeGdprCompleted', { shows: matchedShows, lists: parsed.lists.length, skipped: skippedShows }));
+    }
+  }
+
   async function importListsJSON(file) {
     try {
       const text = await file.text();
@@ -908,12 +1089,12 @@ export function useLibraryData({ apiKey, lang, t, setError, setImportProgress, o
 
   return {
     library, filmLibrary, gameLibrary, lists, watchLog, ready, loadAll, watchedCountForShow,
-    addShow, removeShow, toggleEpisode, markUpTo, setEpisodesWatched, setShowWatchStatus, markAllWatched, rewatchShow, bulkUpdateShows, refreshOnAirShows,
+    addShow, removeShow, toggleEpisode, markUpTo, setEpisodesWatched, setShowWatchStatus, markAllWatched, rewatchShow, bulkUpdateShows, refreshOnAirShows, refreshStaleTmdbCache,
     addFilm, toggleFilmWatched, removeFilm, setFilmWatchStatus, rewatchFilm,
     addGame, removeGame, setGameWatchStatus, setGameHoursPlayed, toggleGameCompleted100, toggleGamePlatinum, rewatchGame,
     createList, deleteList, updateListMeta, toggleListMembership, removeFromList,
     exportCSV, importCSV, exportShowsJSON, importShowsJSON,
     exportFilmsCSV, importFilmsCSV, exportFilmsJSON, importFilmsJSON,
-    exportListsCSV, importListsCSV, exportListsJSON, importListsJSON,
+    exportListsCSV, importListsCSV, exportListsJSON, importListsJSON, importTvTimeGdprZip,
   };
 }

@@ -12,6 +12,7 @@ import ProfilePage from './components/profile/ProfilePage.jsx';
 import GamesOnboarding from './components/onboarding/GamesOnboarding.jsx';
 import TvTimeImportPrompt from './components/onboarding/TvTimeImportPrompt.jsx';
 import { hasSeenTvTimePrompt, markTvTimePromptSeen } from './lib/tvTimePrompt.js';
+import { listFollowers, listFollowing } from './lib/follows.js';
 import ConfettiBurst from './components/ui/ConfettiBurst.jsx';
 import { useToast } from './contexts/ToastContext.jsx';
 import { useAuth } from './contexts/AuthContext.jsx';
@@ -26,6 +27,9 @@ const ShowDetail = lazy(() => import('./components/show/ShowDetail.jsx'));
 const FilmDetail = lazy(() => import('./components/film/FilmDetail.jsx'));
 const GameDetail = lazy(() => import('./components/game/GameDetail.jsx'));
 const SettingsPage = lazy(() => import('./components/settings/SettingsPage.jsx'));
+const EditProfileModal = lazy(() => import('./components/profile/EditProfileModal.jsx'));
+const StatsPage = lazy(() => import('./components/tabs/StatsPage.jsx'));
+const FollowListModal = lazy(() => import('./components/profile/FollowListModal.jsx'));
 
 function ModalFallback() {
   return (
@@ -57,6 +61,10 @@ export default function TVTracker() {
   const [mainScrolled, setMainScrolled] = useState(false);
   const mainRef = useRef(null);
   const [showTvTimePrompt, setShowTvTimePrompt] = useState(() => !hasSeenTvTimePrompt());
+  const [editingProfile, setEditingProfile] = useState(false);
+  const [statsOpen, setStatsOpen] = useState(false);
+  const [followListPanel, setFollowListPanel] = useState(null);
+  const [followListData, setFollowListData] = useState([]);
   const [autoPauseMonths, setAutoPauseMonthsState] = useState(getAutoPauseMonths);
 
   const data = useLibraryData({
@@ -85,6 +93,7 @@ export default function TVTracker() {
   useEffect(() => {
     if (!ready || !data.ready) return;
     data.refreshOnAirShows();
+    data.refreshStaleTmdbCache();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ready, data.ready]);
 
@@ -162,6 +171,12 @@ export default function TVTracker() {
     setShowTvTimePrompt(false);
   }
 
+  async function openFollowListPanel(kind) {
+    setFollowListPanel(kind);
+    const data = kind === 'followers' ? await listFollowers(user.id) : await listFollowing(user.id);
+    setFollowListData(data);
+  }
+
   function goToImportFromTvTimePrompt() {
     dismissTvTimePrompt();
     setSettingsOpen(true);
@@ -212,6 +227,9 @@ export default function TVTracker() {
       <ProfilePage
         onOpenSettings={() => setSettingsOpen(true)}
         onGoToFriends={() => setTab('friends')}
+        onEditProfile={() => setEditingProfile(true)}
+        onOpenStats={() => setStatsOpen(true)}
+        onOpenFollowList={openFollowListPanel}
         library={data.library} filmLibrary={data.filmLibrary} gameLibrary={data.gameLibrary}
         watchedCountForShow={data.watchedCountForShow} watchLog={data.watchLog} showGames={showGames}
         onOpenShow={setDetailId} onOpenFilm={setFilmDetailId} onOpenGame={setGameDetailId}
@@ -350,8 +368,31 @@ export default function TVTracker() {
             onExport={data.exportCSV} onImport={data.importCSV} onExportJSON={data.exportShowsJSON} onImportJSON={data.importShowsJSON} showCount={Object.keys(data.library).length}
             onExportFilms={data.exportFilmsCSV} onImportFilms={data.importFilmsCSV} onExportFilmsJSON={data.exportFilmsJSON} onImportFilmsJSON={data.importFilmsJSON} filmCount={Object.keys(data.filmLibrary).length}
             onExportLists={data.exportListsCSV} onImportLists={data.importListsCSV} onExportListsJSON={data.exportListsJSON} onImportListsJSON={data.importListsJSON} listCount={Object.keys(data.lists).length}
+            onImportTvTimeGdpr={data.importTvTimeGdprZip}
             autoPauseMonths={autoPauseMonths} onSetAutoPauseMonths={handleSetAutoPauseMonths}
           />
+        </Suspense>
+      )}
+
+      {editingProfile && (
+        <Suspense fallback={<ModalFallback />}>
+          <EditProfileModal onClose={() => setEditingProfile(false)} />
+        </Suspense>
+      )}
+
+      {statsOpen && (
+        <Suspense fallback={<ModalFallback />}>
+          <StatsPage
+            onClose={() => setStatsOpen(false)}
+            library={data.library} filmLibrary={data.filmLibrary} gameLibrary={data.gameLibrary}
+            watchedCountForShow={data.watchedCountForShow} watchLog={data.watchLog} showGames={showGames}
+          />
+        </Suspense>
+      )}
+
+      {followListPanel && (
+        <Suspense fallback={<ModalFallback />}>
+          <FollowListModal kind={followListPanel} data={followListData} onClose={() => setFollowListPanel(null)} />
         </Suspense>
       )}
     </div>

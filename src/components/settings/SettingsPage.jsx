@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import {
   X, User, Palette, Globe, Bell, Shield, Lock, Database, Info, LifeBuoy, LogOut, Loader2, Send, CheckCircle2,
 } from 'lucide-react';
@@ -15,6 +15,7 @@ import { useToast } from '../../contexts/ToastContext.jsx';
 import { supabase } from '../../lib/supabaseClient.js';
 import { upsertProfile } from '../../lib/profiles.js';
 import { sendFeedback } from '../../lib/feedback.js';
+import TmdbAttributionBadge from '../ui/TmdbAttributionBadge.jsx';
 
 const APP_VERSION = '2.0.0';
 
@@ -22,7 +23,7 @@ export default function SettingsPage({
   onClose,
   onExport, onImport, onExportJSON, onImportJSON, showCount,
   onExportFilms, onImportFilms, onExportFilmsJSON, onImportFilmsJSON, filmCount,
-  onExportLists, onImportLists, onExportListsJSON, onImportListsJSON, listCount,
+  onExportLists, onImportLists, onExportListsJSON, onImportListsJSON, listCount, onImportTvTimeGdpr,
   autoPauseMonths, onSetAutoPauseMonths,
 }) {
   const { t, lang, setLang } = useI18n();
@@ -32,6 +33,7 @@ export default function SettingsPage({
   const toast = useToast();
 
   const [open, setOpen] = useState('account');
+  const gdprInputRef = useRef(null);
   const [editingProfile, setEditingProfile] = useState(false);
   const [confirmLogout, setConfirmLogout] = useState(false);
   const [sendingReset, setSendingReset] = useState(false);
@@ -96,7 +98,10 @@ export default function SettingsPage({
         className="modal-sheet w-full rounded-t-2xl overflow-y-auto"
         style={{ background: 'var(--bg)', maxWidth: 480, maxHeight: '92vh', border: '1px solid var(--border)', borderBottom: 'none' }}
       >
-        <div className="flex items-center justify-between p-4 sticky top-0 z-10" style={{ background: 'var(--bg)', borderBottom: '1px solid var(--border)' }}>
+        <div
+          className="flex items-center justify-between p-4 sticky top-0 z-10"
+          style={{ background: 'var(--bg)', borderBottom: '1px solid var(--border)', paddingTop: 'calc(16px + env(safe-area-inset-top, 0px))' }}
+        >
           <h2 className="font-display text-2xl">{t('settings.title')}</h2>
           <button onClick={onClose} aria-label={t('common.close')}><X size={20} style={{ color: 'var(--muted)' }} /></button>
         </div>
@@ -279,11 +284,33 @@ export default function SettingsPage({
             <BackupSection title={t('settings.backupSeriesTitle')} description={t('settings.backupSeriesDesc')} count={showCount} onExportCSV={onExport} onImportCSV={onImport} onExportJSON={onExportJSON} onImportJSON={onImportJSON} />
             <BackupSection title={t('settings.backupFilmsTitle')} description={t('settings.backupFilmsDesc')} count={filmCount} onExportCSV={onExportFilms} onImportCSV={onImportFilms} onExportJSON={onExportFilmsJSON} onImportJSON={onImportFilmsJSON} />
             <BackupSection title={t('settings.backupListsTitle')} description={t('settings.backupListsDesc')} count={listCount} onExportCSV={onExportLists} onImportCSV={onImportLists} onExportJSON={onExportListsJSON} onImportJSON={onImportListsJSON} />
+
+            <div className="mt-5 pt-5" style={{ borderTop: '1px solid var(--border)' }}>
+              <p className="font-body text-sm font-semibold mb-1">{t('settings.tvtimeGdprTitle')}</p>
+              <p className="font-body text-xs mb-3" style={{ color: 'var(--muted)' }}>{t('settings.tvtimeGdprDesc')}</p>
+              <input
+                ref={gdprInputRef}
+                type="file"
+                accept=".zip"
+                className="sr-only"
+                onChange={(e) => { const f = e.target.files?.[0]; if (f) onImportTvTimeGdpr(f); e.target.value = ''; }}
+              />
+              <button
+                onClick={() => gdprInputRef.current?.click()}
+                className="btn-press w-full py-2.5 rounded-full font-body font-semibold text-sm"
+                style={{ background: 'var(--surface-alt)', color: 'var(--text)', border: '1px solid var(--border)' }}
+              >
+                {t('settings.tvtimeGdprButton')}
+              </button>
+            </div>
           </SettingsSection>
 
           <SettingsSection icon={Info} title={t('settings.sectionAbout')} isOpen={open === 'about'} onToggle={() => toggleSection('about')}>
             <p className="font-body text-sm mb-1">{t('settings.aboutVersion')}: <span className="font-mono">{APP_VERSION}</span></p>
-            <p className="font-body text-xs mt-3" style={{ color: 'var(--muted)' }}>{t('settings.aboutTmdbAttribution')}</p>
+            <div className="flex items-center gap-2 mt-3" style={{ color: 'var(--muted)' }}>
+              <TmdbAttributionBadge height={13} />
+            </div>
+            <p className="font-body text-xs mt-1.5" style={{ color: 'var(--muted)' }}>{t('settings.aboutTmdbAttribution')}</p>
             <p className="font-body text-xs mt-2" style={{ color: 'var(--muted)' }}>{t('settings.aboutMadeWith')}</p>
           </SettingsSection>
 

@@ -68,7 +68,10 @@ export default function NotificationsPanel({ onClose, onChangeUnread }) {
         className="fade-slide-down w-full rounded-b-2xl sm:rounded-2xl overflow-y-auto"
         style={{ background: 'var(--bg)', maxWidth: 400, maxHeight: '80vh', border: '1px solid var(--border)', marginTop: 0 }}
       >
-        <div className="flex items-center justify-between p-4 sticky top-0" style={{ background: 'var(--bg)', borderBottom: '1px solid var(--border)' }}>
+        <div
+          className="flex items-center justify-between p-4 sticky top-0"
+          style={{ background: 'var(--bg)', borderBottom: '1px solid var(--border)', paddingTop: 'calc(16px + env(safe-area-inset-top, 0px))' }}
+        >
           <h2 className="font-display text-xl flex items-center gap-2"><Bell size={18} /> {t('notifications.title')}</h2>
           <button onClick={onClose} aria-label={t('common.close')}><X size={19} style={{ color: 'var(--muted)' }} /></button>
         </div>

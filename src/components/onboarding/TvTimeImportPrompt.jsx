@@ -1,4 +1,4 @@
-import { ArrowRight, Clock } from 'lucide-react';
+import { ArrowRight, Clock, Smartphone } from 'lucide-react';
 import { useI18n } from '../../i18n/index.jsx';
 
 export default function TvTimeImportPrompt({ onOpenSettings, onDismiss }) {
@@ -6,6 +6,10 @@ export default function TvTimeImportPrompt({ onOpenSettings, onDismiss }) {
 
   function handleExport() {
     window.open('https://chromewebstore.google.com/detail/tv-time-out-by-refract/pmejpdpjbkjklfceogdkolmgclldogbi', '_blank', 'noopener,noreferrer');
+  }
+
+  function handleGdprExport() {
+    window.open('https://gdpr.tvtime.com/gdpr/self-service', '_blank', 'noopener,noreferrer');
   }
 
   return (
@@ -34,9 +38,25 @@ export default function TvTimeImportPrompt({ onOpenSettings, onDismiss }) {
         >
           {t('tvtimePrompt.cta')} <ArrowRight size={15} />
         </button>
+
+        <div className="flex items-center gap-2 my-3" aria-hidden="true">
+          <div style={{ flex: 1, height: 1, background: 'var(--border)' }} />
+          <span className="font-mono" style={{ fontSize: 10, color: 'var(--muted)' }}>{t('tvtimePrompt.or')}</span>
+          <div style={{ flex: 1, height: 1, background: 'var(--border)' }} />
+        </div>
+
+        <button
+          onClick={handleGdprExport}
+          className="btn-press w-full flex items-center justify-center gap-2 py-3 rounded-full font-body font-semibold text-sm"
+          style={{ background: 'var(--surface-alt)', color: 'var(--text)', border: '1px solid var(--border)' }}
+        >
+          <Smartphone size={15} /> {t('tvtimePrompt.ctaMobile')}
+        </button>
+        <p className="font-body text-xs mt-1.5" style={{ color: 'var(--muted)' }}>{t('tvtimePrompt.mobileNote')}</p>
+
         <button
           onClick={onOpenSettings}
-          className="btn-press w-full py-3 rounded-full font-body font-semibold text-sm mt-2.5"
+          className="btn-press w-full py-3 rounded-full font-body font-semibold text-sm mt-4"
           style={{ background: 'var(--surface)', color: 'var(--text)', border: '1px solid var(--border)' }}
         >
           {t('tvtimePrompt.goToImport')}

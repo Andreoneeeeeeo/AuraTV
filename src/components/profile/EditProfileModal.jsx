@@ -96,12 +96,24 @@ export default function EditProfileModal({ onClose }) {
         className="modal-sheet w-full rounded-t-2xl overflow-y-auto"
         style={{ background: 'var(--bg)', maxWidth: 480, maxHeight: '90vh', border: '1px solid var(--border)', borderBottom: 'none' }}
       >
-        <div className="flex items-center justify-between p-4" style={{ borderBottom: '1px solid var(--border)' }}>
-          <h2 className="font-display text-2xl">{t('profile.editTitle')}</h2>
+        <div
+          className="flex items-center justify-between p-4 sticky top-0 z-10"
+          style={{ background: 'var(--bg)', borderBottom: '1px solid var(--border)', paddingTop: 'calc(16px + env(safe-area-inset-top, 0px))' }}
+        >
           <button type="button" onClick={onClose} aria-label={t('common.close')}><X size={20} style={{ color: 'var(--muted)' }} /></button>
+          <h2 className="font-display text-xl">{t('profile.editTitle')}</h2>
+          <button
+            type="submit"
+            disabled={saving}
+            className="btn-press flex items-center gap-1.5 font-body font-bold text-sm"
+            style={{ color: 'var(--amber)', opacity: saving ? 0.6 : 1 }}
+          >
+            {saving && <Loader2 className="animate-spin" size={15} />}
+            {t('profile.saveChanges')}
+          </button>
         </div>
 
-        <div className="p-4">
+        <div className="p-4 pb-8">
           <div className="relative mb-10">
             <div
               className="cursor-pointer"
@@ -167,16 +179,6 @@ export default function EditProfileModal({ onClose }) {
             style={{ background: 'var(--surface)', color: 'var(--text)', border: '1px solid var(--border)' }}
           />
           <p className="font-mono text-xs mt-1" style={{ color: 'var(--muted)' }}>{t('profile.bioHint', { count: bio.length })}</p>
-
-          <button
-            type="submit"
-            disabled={saving}
-            className="btn-press w-full mt-6 py-3 rounded-full font-body font-bold text-sm flex items-center justify-center gap-2"
-            style={{ background: 'var(--amber)', color: 'var(--on-accent)', opacity: saving ? 0.7 : 1 }}
-          >
-            {saving && <Loader2 className="animate-spin" size={16} />}
-            {t('profile.saveChanges')}
-          </button>
         </div>
       </form>
     </div>

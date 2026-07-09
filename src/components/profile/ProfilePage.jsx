@@ -1,7 +1,6 @@
-import { useState, useEffect, lazy, Suspense } from 'react';
-import { Settings as SettingsIcon, Users, Pencil, Star, Loader2 } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Settings as SettingsIcon, Users, Pencil, Star } from 'lucide-react';
 import Avatar from '../ui/Avatar.jsx';
-import FollowListModal from './FollowListModal.jsx';
 import FavoritesSection from './FavoritesSection.jsx';
 import InProgressSection from './InProgressSection.jsx';
 import StatsPreviewCard from './StatsPreviewCard.jsx';
@@ -13,34 +12,20 @@ import { useI18n } from '../../i18n/index.jsx';
 import { useAuth } from '../../contexts/AuthContext.jsx';
 import { listReviewsByUser, computeReviewStats } from '../../lib/reviews.js';
 import { resolvePosterUrl } from '../../lib/tmdb.js';
-import { countFollowers, countFollowing, listFollowers, listFollowing } from '../../lib/follows.js';
+import { countFollowers, countFollowing } from '../../lib/follows.js';
 import { fmtDate } from '../../lib/format.js';
 
-const EditProfileModal = lazy(() => import('./EditProfileModal.jsx'));
-const StatsPage = lazy(() => import('../tabs/StatsPage.jsx'));
-
-function ModalFallback() {
-  return (
-    <div className="fixed inset-0 z-30 flex items-center justify-center" style={{ background: 'var(--overlay)' }}>
-      <Loader2 className="animate-spin" size={24} style={{ color: 'var(--amber)' }} />
-    </div>
-  );
-}
-
 export default function ProfilePage({
-  onOpenSettings, onGoToFriends, library, filmLibrary, gameLibrary, watchedCountForShow, watchLog, showGames,
+  onOpenSettings, onGoToFriends, library, filmLibrary, gameLibrary, watchedCountForShow, showGames,
   onOpenShow, onOpenFilm, onOpenGame, onOpenRelated, onOpenRelatedGame,
+  onEditProfile, onOpenStats, onOpenFollowList,
 }) {
   const { t, lang } = useI18n();
   const { user, profile } = useAuth();
-  const [editing, setEditing] = useState(false);
-  const [statsOpen, setStatsOpen] = useState(false);
   const [tab, setTab] = useState('favorites');
   const [reviews, setReviews] = useState([]);
   const [followerCount, setFollowerCount] = useState(0);
   const [followingCount, setFollowingCount] = useState(0);
-  const [listPanel, setListPanel] = useState(null);
-  const [listPanelData, setListPanelData] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -59,12 +44,6 @@ export default function ProfilePage({
       setLoading(false);
     })();
   }, [user.id]);
-
-  async function openFollowList(kind) {
-    setListPanel(kind);
-    const data = kind === 'followers' ? await listFollowers(user.id) : await listFollowing(user.id);
-    setListPanelData(data);
-  }
 
   const reviewStats = computeReviewStats(reviews);
   const mostReviewed = [...reviews].sort((a, b) => new Date(b.created_at) - new Date(a.created_at)).slice(0, 6);
@@ -106,7 +85,7 @@ export default function ProfilePage({
             <p className="font-mono text-xs" style={{ color: 'var(--muted)' }}>@{profile?.username}</p>
           </div>
           <button
-            onClick={() => setEditing(true)}
+            onClick={onEditProfile}
             className="btn-press flex items-center gap-1.5 px-3 py-1.5 rounded-full font-body text-xs font-semibold"
             style={{ background: 'var(--surface)', color: 'var(--text)', border: '1px solid var(--border)' }}
           >
@@ -121,10 +100,10 @@ export default function ProfilePage({
             <Users size={15} style={{ color: 'var(--muted)' }} />
             {t('nav.friends')}
           </button>
-          <button onClick={() => openFollowList('followers')} className="btn-press font-body text-sm font-medium">
+          <button onClick={() => onOpenFollowList('followers')} className="btn-press font-body text-sm font-medium">
             <b>{followerCount}</b> {t('follow.followers')}
           </button>
-          <button onClick={() => openFollowList('following')} className="btn-press font-body text-sm font-medium">
+          <button onClick={() => onOpenFollowList('following')} className="btn-press font-body text-sm font-medium">
             <b>{followingCount}</b> {t('follow.followingCount')}
           </button>
           <span className="flex items-center gap-1.5 font-body text-sm font-medium">
@@ -136,7 +115,7 @@ export default function ProfilePage({
 
       <div className="mt-6">
         <StatsPreviewCard
-          onOpen={() => setStatsOpen(true)}
+          onOpen={onOpenStats}
           totalWatched={totalWatched}
           totalHours={totalHours}
           filmsWatched={filmsWatched}
@@ -186,24 +165,6 @@ export default function ProfilePage({
           )
         )}
       </div>
-
-      {editing && (
-        <Suspense fallback={<ModalFallback />}>
-          <EditProfileModal onClose={() => setEditing(false)} />
-        </Suspense>
-      )}
-      {statsOpen && (
-        <Suspense fallback={<ModalFallback />}>
-          <StatsPage
-            onClose={() => setStatsOpen(false)}
-            library={library} filmLibrary={filmLibrary} gameLibrary={gameLibrary}
-            watchedCountForShow={watchedCountForShow} watchLog={watchLog} showGames={showGames}
-          />
-        </Suspense>
-      )}
-      {listPanel && (
-        <FollowListModal kind={listPanel} data={listPanelData} onClose={() => setListPanel(null)} />
-      )}
     </div>
   );
 }
