@@ -259,6 +259,13 @@ button { -webkit-tap-highlight-color: transparent; }
 :root[data-textsize='large'] { font-size: 17.5px; }
 
 /* ============ FOCUS (accessibilità + rifinitura, vale per tutta l'app) ============ */
+/* Su iOS, un campo con testo sotto i 16px fa scattare lo zoom automatico
+   della pagina al tocco. Il tag viewport in index.html lo blocca già, ma
+   questa è una seconda linea di difesa (alcune webview native lo ignorano
+   parzialmente) — solo su schermi piccoli, per non toccare l'aspetto desktop. */
+@media (max-width: 639px) {
+  input, textarea, select { font-size: 16px !important; }
+}
 input:focus-visible, textarea:focus-visible, select:focus-visible {
   outline: none;
   border-color: var(--amber) !important;
