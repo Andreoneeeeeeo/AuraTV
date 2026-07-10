@@ -8,7 +8,7 @@ import { useI18n } from '../../i18n/index.jsx';
 
 export default function LibraryTab({
   library, watchedCountForShow, onOpen, filmLibrary, onOpenFilm, lists, onCreateList, onDeleteList, onRemoveFromList, onUpdateListMeta,
-  apiKey, setError, onToggleEpisode,
+  apiKey, setError, onToggleEpisode, collapsedSections, onToggleSection,
 }) {
   const { t } = useI18n();
   const [segment, setSegment] = useState('palinsesto');
@@ -26,8 +26,18 @@ export default function LibraryTab({
         ]}
       />
       {segment === 'palinsesto' && <CalendarTab library={library} apiKey={apiKey} setError={setError} onToggleEpisode={onToggleEpisode} />}
-      {segment === 'serie' && <SeriesLibrary library={library} watchedCountForShow={watchedCountForShow} onOpen={onOpen} />}
-      {segment === 'film' && <FilmLibrary filmLibrary={filmLibrary} onOpen={onOpenFilm} />}
+      {segment === 'serie' && (
+        <SeriesLibrary
+          library={library} watchedCountForShow={watchedCountForShow} onOpen={onOpen}
+          collapsed={collapsedSections?.series || []} onToggleSection={(key) => onToggleSection('series', key)}
+        />
+      )}
+      {segment === 'film' && (
+        <FilmLibrary
+          filmLibrary={filmLibrary} onOpen={onOpenFilm}
+          collapsed={collapsedSections?.films || []} onToggleSection={(key) => onToggleSection('films', key)}
+        />
+      )}
       {segment === 'liste' && (
         <ListsLibrary
           lists={lists} library={library} filmLibrary={filmLibrary}

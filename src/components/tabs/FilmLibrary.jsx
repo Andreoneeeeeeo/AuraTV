@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { Film, Check, ChevronDown } from 'lucide-react';
 import Poster from '../shared/Poster.jsx';
 import EmptyState from '../shared/EmptyState.jsx';
@@ -8,9 +7,9 @@ import { getFilmWatchStatus } from '../../lib/watchStatus.js';
 
 const SECTION_ORDER = ['watching', 'planned', 'on_hold', 'completed', 'dropped'];
 
-export default function FilmLibrary({ filmLibrary, onOpen }) {
+export default function FilmLibrary({ filmLibrary, onOpen, collapsed = [], onToggleSection }) {
   const { t } = useI18n();
-  const [collapsed, setCollapsed] = useState(() => new Set());
+  const collapsedSet = new Set(collapsed);
   const films = Object.values(filmLibrary).sort((a, b) => (b.lastWatchedAt || b.addedAt) - (a.lastWatchedAt || a.addedAt));
   if (films.length === 0) {
     return <EmptyState icon={Film} text={t('library.emptyFilms')} />;
@@ -33,14 +32,8 @@ export default function FilmLibrary({ filmLibrary, onOpen }) {
   return (
     <div>
       {sections.map((section) => {
-        const isOpen = !collapsed.has(section.key);
-        function toggle() {
-          setCollapsed((prev) => {
-            const next = new Set(prev);
-            isOpen ? next.add(section.key) : next.delete(section.key);
-            return next;
-          });
-        }
+        const isOpen = !collapsedSet.has(section.key);
+        function toggle() { onToggleSection(section.key); }
         return (
           <div key={section.key} className="mb-7">
             <button onClick={toggle} aria-expanded={isOpen} className="btn-press flex items-center gap-2 mb-3 w-full">

@@ -8,10 +8,10 @@ import { getShowWatchStatus, isShowCaughtUp } from '../../lib/watchStatus.js';
 
 const SECTION_ORDER = ['watching', 'caught_up', 'planned', 'on_hold', 'completed', 'dropped'];
 
-export default function SeriesLibrary({ library, watchedCountForShow, onOpen }) {
+export default function SeriesLibrary({ library, watchedCountForShow, onOpen, collapsed = [], onToggleSection }) {
   const { t } = useI18n();
   const [view, setView] = useState('grid');
-  const [collapsed, setCollapsed] = useState(() => new Set());
+  const collapsedSet = new Set(collapsed);
   const shows = Object.values(library).sort((a, b) => (b.lastWatchedAt || b.addedAt) - (a.lastWatchedAt || a.addedAt));
   if (shows.length === 0) {
     return <EmptyState icon={Tv} text={t('library.emptySeries')} />;
@@ -53,14 +53,8 @@ export default function SeriesLibrary({ library, watchedCountForShow, onOpen }) 
       </div>
 
       {sections.map((section) => {
-        const isOpen = !collapsed.has(section.key);
-        function toggle() {
-          setCollapsed((prev) => {
-            const next = new Set(prev);
-            isOpen ? next.add(section.key) : next.delete(section.key);
-            return next;
-          });
-        }
+        const isOpen = !collapsedSet.has(section.key);
+        function toggle() { onToggleSection(section.key); }
         return (
         <div key={section.key} className="mb-7">
           <button onClick={toggle} aria-expanded={isOpen} className="btn-press flex items-center gap-2 mb-3 w-full">

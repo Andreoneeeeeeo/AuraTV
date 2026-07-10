@@ -21,6 +21,7 @@ import { useLibraryData } from './hooks/useLibraryData.js';
 import { useBackHandler } from './hooks/useBackHandler.js';
 import { upsertProfile } from './lib/profiles.js';
 import { getAutoPauseMonths, setAutoPauseMonths } from './lib/autoPauseSetting.js';
+import { getCollapsedSections, setCollapsedSections } from './lib/collapsedSectionsSetting.js';
 import { computeAutoPauseUpdates } from './lib/watchStatus.js';
 
 const ShowDetail = lazy(() => import('./components/show/ShowDetail.jsx'));
@@ -66,6 +67,7 @@ export default function TVTracker() {
   const [followListPanel, setFollowListPanel] = useState(null);
   const [followListData, setFollowListData] = useState([]);
   const [autoPauseMonths, setAutoPauseMonthsState] = useState(getAutoPauseMonths);
+  const [collapsedSections, setCollapsedSectionsState] = useState(getCollapsedSections);
 
   const data = useLibraryData({
     apiKey, lang, t, setError, setImportProgress, userId: user?.id,
@@ -116,6 +118,28 @@ export default function TVTracker() {
     setAutoPauseMonths(months);
     setAutoPauseMonthsState(months);
     if (user) upsertProfile(user.id, { auto_pause_months: months }).catch(() => toast.error(t('settings.syncSaveFailed')));
+  }
+
+  const collapsedSectionsSynced = useRef(false);
+  useEffect(() => {
+    if (!profile || collapsedSectionsSynced.current) return;
+    collapsedSectionsSynced.current = true;
+    if (profile.collapsed_library_sections) {
+      const next = { series: [], films: [], games: [], ...profile.collapsed_library_sections };
+      setCollapsedSections(next);
+      setCollapsedSectionsState(next);
+    }
+  }, [profile]);
+
+  function handleToggleSection(kind, key) {
+    setCollapsedSectionsState((prev) => {
+      const current = new Set(prev[kind] || []);
+      current.has(key) ? current.delete(key) : current.add(key);
+      const next = { ...prev, [kind]: Array.from(current) };
+      setCollapsedSections(next);
+      if (user) upsertProfile(user.id, { collapsed_library_sections: next }).catch(() => toast.error(t('settings.syncSaveFailed')));
+      return next;
+    });
   }
 
   const [previewShow, setPreviewShow] = useState(null);
@@ -209,6 +233,7 @@ export default function TVTracker() {
           filmLibrary={data.filmLibrary} onOpenFilm={setFilmDetailId}
           lists={data.lists} onCreateList={data.createList} onDeleteList={data.deleteList} onRemoveFromList={data.removeFromList} onUpdateListMeta={data.updateListMeta}
           apiKey={apiKey} setError={setError} onToggleEpisode={data.toggleEpisode}
+          collapsedSections={collapsedSections} onToggleSection={handleToggleSection}
         />
       );
     }
@@ -221,7 +246,12 @@ export default function TVTracker() {
       );
     }
     if (tab === 'games') {
-      return <GamesTab gameLibrary={data.gameLibrary} onAdd={data.addGame} onOpen={setGameDetailId} onOpenRelated={openRelatedGame} />;
+      return (
+        <GamesTab
+          gameLibrary={data.gameLibrary} onAdd={data.addGame} onOpen={setGameDetailId} onOpenRelated={openRelatedGame}
+          collapsed={collapsedSections.games || []} onToggleSection={(key) => handleToggleSection('games', key)}
+        />
+      );
     }
     return (
       <ProfilePage

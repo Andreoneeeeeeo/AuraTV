@@ -11,10 +11,10 @@ import { getGameWatchStatus } from '../../lib/watchStatus.js';
 
 const SECTION_ORDER = ['watching', 'planned', 'on_hold', 'completed', 'dropped'];
 
-export default function GamesTab({ gameLibrary, onAdd, onOpen, onOpenRelated }) {
+export default function GamesTab({ gameLibrary, onAdd, onOpen, onOpenRelated, collapsed = [], onToggleSection }) {
   const { t } = useI18n();
   const [segment, setSegment] = useState('library');
-  const [collapsed, setCollapsed] = useState(() => new Set());
+  const collapsedSet = new Set(collapsed);
   const [query, setQuery] = useState('');
   const [results, setResults] = useState([]);
   const [trending, setTrending] = useState([]);
@@ -64,14 +64,8 @@ export default function GamesTab({ gameLibrary, onAdd, onOpen, onOpenRelated }) 
           <EmptyState icon={Gamepad2} text={t('games.emptyLibrary')} />
         ) : (
           sections.map((section) => {
-            const isOpen = !collapsed.has(section.key);
-            function toggle() {
-              setCollapsed((prev) => {
-                const next = new Set(prev);
-                isOpen ? next.add(section.key) : next.delete(section.key);
-                return next;
-              });
-            }
+            const isOpen = !collapsedSet.has(section.key);
+            function toggle() { onToggleSection(section.key); }
             return (
               <div key={section.key} className="mb-7">
                 <button onClick={toggle} aria-expanded={isOpen} className="btn-press flex items-center gap-2 mb-3 w-full">
