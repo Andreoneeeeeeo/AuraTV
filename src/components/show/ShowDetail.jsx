@@ -24,7 +24,7 @@ import { SkeletonRows } from '../ui/Skeleton.jsx';
 import { useI18n } from '../../i18n/index.jsx';
 import { useBackHandler } from '../../hooks/useBackHandler.js';
 import { useAuth } from '../../contexts/AuthContext.jsx';
-import { tmdb, fetchFullDetails } from '../../lib/tmdb.js';
+import { tmdb, fetchFullDetails, IMG_STILL } from '../../lib/tmdb.js';
 import { fmtDate } from '../../lib/format.js';
 import { translateTmdbError } from '../../lib/errors.js';
 import { getShowWatchStatus, isShowCaughtUp } from '../../lib/watchStatus.js';
@@ -49,6 +49,7 @@ export default function ShowDetail({
   const [expanded, setExpanded] = useState(null);
   const [confirmPrompt, setConfirmPrompt] = useState(null);
   const [confirmMarkAll, setConfirmMarkAll] = useState(false);
+  const [confirmSeasonAction, setConfirmSeasonAction] = useState(null);
   const [listPickerOpen, setListPickerOpen] = useState(false);
   const [adding, setAdding] = useState(false);
 
@@ -132,7 +133,11 @@ export default function ShowDetail({
     }
   }
 
-  async function markSeasonWatched(seasonNum) {
+  async function markSeasonWatched(seasonNum, unmark = false) {
+    if (unmark) {
+      onSetSeasonWatched(show.id, seasonNum, []);
+      return;
+    }
     let episodes = seasonCache[seasonNum];
     if (!episodes) {
       try {
@@ -331,8 +336,20 @@ export default function ShowDetail({
                       </p>
                     </div>
                     <div className="flex items-center gap-3">
-                      <span onClick={(e) => { e.stopPropagation(); markSeasonWatched(season.season_number); }} className="btn-press font-mono text-xs" style={{ color: 'var(--amber)' }}>
-                        {t('showDetail.markAllSeason')}
+                      <span
+                        onClick={(e) => { e.stopPropagation(); setConfirmSeasonAction({ seasonNum: season.season_number, unmark: pct >= 100 }); }}
+                        role="checkbox"
+                        aria-checked={pct >= 100}
+                        aria-label={t('showDetail.markAllSeason')}
+                        className="btn-press flex items-center justify-center"
+                        style={{
+                          width: 26, height: 26, borderRadius: '50%', flexShrink: 0,
+                          border: `1.5px solid ${pct >= 100 ? 'var(--watched)' : 'var(--muted)'}`,
+                          background: pct >= 100 ? 'var(--watched)' : 'transparent',
+                          boxShadow: pct >= 100 ? '0 0 8px rgba(var(--watched-rgb), 0.4)' : 'none',
+                        }}
+                      >
+                        {pct >= 100 && <Check size={14} color="var(--bg)" />}
                       </span>
                       <ChevronDown size={16} className="chevron" style={{ color: 'var(--muted)', transform: isOpen ? 'rotate(180deg)' : 'rotate(0deg)' }} />
                     </div>
@@ -346,9 +363,22 @@ export default function ShowDetail({
                         <Centered><Loader2 className="animate-spin" size={18} /></Centered>
                       ) : (seasonCache[season.season_number] || []).map((ep) => {
                         const isWatched = watchedNums.has(ep.episode_number);
+                        const isFuture = !!ep.air_date && new Date(ep.air_date) > new Date();
                         return (
                           <button key={ep.id} onClick={() => handleEpisodeClick(season.season_number, ep.episode_number, isWatched)}
                             className="episode-row w-full flex items-center gap-3 p-3 text-left" style={{ borderBottom: '1px solid var(--border)' }}>
+                            {ep.still_path ? (
+                              <img
+                                src={`${IMG_STILL}${ep.still_path}`}
+                                alt=""
+                                loading="lazy"
+                                style={{ width: 84, height: 47, objectFit: 'cover', borderRadius: 8, flexShrink: 0, opacity: isWatched ? 0.6 : 1 }}
+                              />
+                            ) : (
+                              <div style={{ width: 84, height: 47, borderRadius: 8, flexShrink: 0, background: 'var(--surface-alt)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                <ImageIcon size={16} style={{ color: 'var(--muted)' }} aria-hidden="true" />
+                              </div>
+                            )}
                             <div style={{
                               width: 20, height: 20, borderRadius: '50%', flexShrink: 0,
                               border: `1.5px solid ${isWatched ? 'var(--watched)' : 'var(--muted)'}`,
@@ -362,8 +392,20 @@ export default function ShowDetail({
                               <p className="font-body text-sm truncate" style={{ color: isWatched ? 'var(--muted)' : 'var(--text)' }}>
                                 {ep.episode_number}. {ep.name}
                               </p>
-                              <p className="font-mono" style={{ fontSize: 10, color: 'var(--muted)' }}>{fmtDate(ep.air_date, lang)}</p>
+                              {!isFuture && ep.air_date && (
+                                <p className="font-mono" style={{ fontSize: 10, color: 'var(--muted)' }}>{fmtDate(ep.air_date, lang)}</p>
+                              )}
                             </div>
+                            {isFuture && ep.air_date && (
+                              <div className="flex-shrink-0 text-right" style={{ paddingLeft: 8 }}>
+                                <p className="font-mono font-bold" style={{ fontSize: 15, color: 'var(--amber)', lineHeight: 1.1 }}>
+                                  {fmtDate(ep.air_date, lang)}
+                                </p>
+                                <p className="font-mono" style={{ fontSize: 9, color: 'var(--muted)', letterSpacing: '0.04em' }}>
+                                  {t('showDetail.upcoming')}
+                                </p>
+                              </div>
+                            )}
                           </button>
                         );
                       })}
@@ -418,6 +460,16 @@ export default function ShowDetail({
           cancelLabel={t('common.cancel')}
           onCancel={() => setConfirmMarkAll(false)}
           onConfirm={() => { onMarkAllWatched(); setConfirmMarkAll(false); }}
+        />
+      )}
+      {confirmSeasonAction && (
+        <ConfirmDialog
+          title={confirmSeasonAction.unmark ? t('showDetail.unmarkSeasonTitle') : t('showDetail.markSeasonTitle')}
+          body={confirmSeasonAction.unmark ? t('showDetail.unmarkSeasonBody') : t('showDetail.markSeasonBody')}
+          confirmLabel={t('common.confirm')}
+          cancelLabel={t('common.cancel')}
+          onCancel={() => setConfirmSeasonAction(null)}
+          onConfirm={() => { markSeasonWatched(confirmSeasonAction.seasonNum, confirmSeasonAction.unmark); setConfirmSeasonAction(null); }}
         />
       )}
     </div>

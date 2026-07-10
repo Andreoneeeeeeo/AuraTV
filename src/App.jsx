@@ -193,7 +193,7 @@ export default function TVTracker() {
   useBackHandler(() => {
     if (tab !== 'library') { setTab('library'); return; }
     import('@capacitor/app').then(({ App: CapacitorApp }) => CapacitorApp.exitApp()).catch(() => {});
-  });
+  }, true, false);
 
   function renderTab() {
     if (!ready || !data.ready) return <Centered><Loader2 className="animate-spin" size={28} /></Centered>;

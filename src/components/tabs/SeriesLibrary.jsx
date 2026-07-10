@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Tv, List, LayoutGrid } from 'lucide-react';
+import { Tv, List, LayoutGrid, ChevronDown } from 'lucide-react';
 import Poster from '../shared/Poster.jsx';
 import EmptyState from '../shared/EmptyState.jsx';
 import SectionLabel from '../shared/SectionLabel.jsx';
@@ -11,6 +11,7 @@ const SECTION_ORDER = ['watching', 'caught_up', 'planned', 'on_hold', 'completed
 export default function SeriesLibrary({ library, watchedCountForShow, onOpen }) {
   const { t } = useI18n();
   const [view, setView] = useState('grid');
+  const [collapsed, setCollapsed] = useState(() => new Set());
   const shows = Object.values(library).sort((a, b) => (b.lastWatchedAt || b.addedAt) - (a.lastWatchedAt || a.addedAt));
   if (shows.length === 0) {
     return <EmptyState icon={Tv} text={t('library.emptySeries')} />;
@@ -51,9 +52,18 @@ export default function SeriesLibrary({ library, watchedCountForShow, onOpen }) 
         </button>
       </div>
 
-      {sections.map((section) => (
+      {sections.map((section) => {
+        const isOpen = !collapsed.has(section.key);
+        function toggle() {
+          setCollapsed((prev) => {
+            const next = new Set(prev);
+            isOpen ? next.add(section.key) : next.delete(section.key);
+            return next;
+          });
+        }
+        return (
         <div key={section.key} className="mb-7">
-          <div className="flex items-center gap-2 mb-3">
+          <button onClick={toggle} aria-expanded={isOpen} className="btn-press flex items-center gap-2 mb-3 w-full">
             <SectionLabel text={section.label} />
             <span
               className="font-mono flex items-center justify-center"
@@ -61,9 +71,10 @@ export default function SeriesLibrary({ library, watchedCountForShow, onOpen }) 
             >
               {section.shows.length}
             </span>
-          </div>
+            <ChevronDown size={15} className="chevron" style={{ color: 'var(--muted)', marginLeft: 'auto', transform: isOpen ? 'rotate(180deg)' : 'rotate(0deg)' }} />
+          </button>
 
-          {view === 'grid' ? (
+          {isOpen && (view === 'grid' ? (
             <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3">
               {section.shows.map(show => {
                 const watched = watchedCountForShow(show);
@@ -118,9 +129,10 @@ export default function SeriesLibrary({ library, watchedCountForShow, onOpen }) 
                 );
               })}
             </div>
-          )}
+          ))}
         </div>
-      ))}
+        );
+      })}
     </div>
   );
 }

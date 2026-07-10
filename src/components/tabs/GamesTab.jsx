@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Search, Plus, Check, Gamepad2 } from 'lucide-react';
+import { Search, Plus, Check, Gamepad2, ChevronDown } from 'lucide-react';
 import Poster from '../shared/Poster.jsx';
 import EmptyState from '../shared/EmptyState.jsx';
 import SectionLabel from '../shared/SectionLabel.jsx';
@@ -14,6 +14,7 @@ const SECTION_ORDER = ['watching', 'planned', 'on_hold', 'completed', 'dropped']
 export default function GamesTab({ gameLibrary, onAdd, onOpen, onOpenRelated }) {
   const { t } = useI18n();
   const [segment, setSegment] = useState('library');
+  const [collapsed, setCollapsed] = useState(() => new Set());
   const [query, setQuery] = useState('');
   const [results, setResults] = useState([]);
   const [trending, setTrending] = useState([]);
@@ -62,29 +63,42 @@ export default function GamesTab({ gameLibrary, onAdd, onOpen, onOpenRelated }) 
         games.length === 0 ? (
           <EmptyState icon={Gamepad2} text={t('games.emptyLibrary')} />
         ) : (
-          sections.map((section) => (
-            <div key={section.key} className="mb-7">
-              <div className="flex items-center gap-2 mb-3">
-                <SectionLabel text={section.label} />
-                <span
-                  className="font-mono flex items-center justify-center"
-                  style={{ fontSize: 10, color: 'var(--muted)', background: 'var(--surface-alt)', minWidth: 18, height: 18, borderRadius: 9, padding: '0 6px' }}
-                >
-                  {section.games.length}
-                </span>
+          sections.map((section) => {
+            const isOpen = !collapsed.has(section.key);
+            function toggle() {
+              setCollapsed((prev) => {
+                const next = new Set(prev);
+                isOpen ? next.add(section.key) : next.delete(section.key);
+                return next;
+              });
+            }
+            return (
+              <div key={section.key} className="mb-7">
+                <button onClick={toggle} aria-expanded={isOpen} className="btn-press flex items-center gap-2 mb-3 w-full">
+                  <SectionLabel text={section.label} />
+                  <span
+                    className="font-mono flex items-center justify-center"
+                    style={{ fontSize: 10, color: 'var(--muted)', background: 'var(--surface-alt)', minWidth: 18, height: 18, borderRadius: 9, padding: '0 6px' }}
+                  >
+                    {section.games.length}
+                  </span>
+                  <ChevronDown size={15} className="chevron" style={{ color: 'var(--muted)', marginLeft: 'auto', transform: isOpen ? 'rotate(180deg)' : 'rotate(0deg)' }} />
+                </button>
+                {isOpen && (
+                  <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3">
+                    {section.games.map((g) => (
+                      <button key={g.id} onClick={() => onOpen(g.id)} className="card-tap text-left">
+                        <div style={{ borderRadius: 10, overflow: 'hidden', boxShadow: 'var(--shadow-xs)' }}>
+                          <Poster path={g.background_image} fill alt={g.name} />
+                        </div>
+                        <p className="font-body text-xs mt-1.5 truncate">{g.name}</p>
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
-              <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3">
-                {section.games.map((g) => (
-                  <button key={g.id} onClick={() => onOpen(g.id)} className="card-tap text-left">
-                    <div style={{ borderRadius: 10, overflow: 'hidden', boxShadow: 'var(--shadow-xs)' }}>
-                      <Poster path={g.background_image} fill alt={g.name} />
-                    </div>
-                    <p className="font-body text-xs mt-1.5 truncate">{g.name}</p>
-                  </button>
-                ))}
-              </div>
-            </div>
-          ))
+            );
+          })
         )
       ) : (
         <>

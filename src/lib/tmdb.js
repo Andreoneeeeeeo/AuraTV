@@ -26,6 +26,7 @@ export async function tmdb(path, _unusedApiKey, lang = 'it') {
 export const IMG = 'https://image.tmdb.org/t/p/w342';
 export const IMG_SM = 'https://image.tmdb.org/t/p/w185';
 export const IMG_BACKDROP = 'https://image.tmdb.org/t/p/w780';
+export const IMG_STILL = 'https://image.tmdb.org/t/p/w300';
 export const IMG_PROFILE = 'https://image.tmdb.org/t/p/w185';
 export const IMG_LOGO = 'https://image.tmdb.org/t/p/w92';
 
