@@ -2,7 +2,6 @@ import { useState, useEffect, useRef, lazy, Suspense } from 'react';
 import { Loader2, AlertCircle, X } from 'lucide-react';
 import Header from './components/layout/Header.jsx';
 import BottomNav from './components/layout/BottomNav.jsx';
-import SideNav from './components/layout/SideNav.jsx';
 import Centered from './components/shared/Centered.jsx';
 import LibraryTab from './components/tabs/LibraryTab.jsx';
 import DiscoverTab from './components/tabs/DiscoverTab.jsx';
@@ -270,8 +269,6 @@ export default function TVTracker() {
 
   return (
     <div className="app-shell font-body flex flex-col md:flex-row">
-      <SideNav tab={tab} setTab={setTab} showGames={showGames} />
-
       <div className="flex-1 flex flex-col min-w-0">
         <Header tab={tab} onOpenProfile={() => setTab('profile')} scrolled={mainScrolled} />
 
@@ -302,7 +299,7 @@ export default function TVTracker() {
 
         <main
           ref={mainRef}
-          className="flex-1 overflow-y-auto px-4 pb-24 md:pb-8 pt-4"
+          className="flex-1 overflow-y-auto px-4 pb-24 pt-4"
           style={{ maxWidth: 720, margin: '0 auto', width: '100%' }}
           onScroll={(e) => {
             const isScrolled = e.currentTarget.scrollTop > 8;
