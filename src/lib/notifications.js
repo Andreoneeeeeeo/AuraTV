@@ -8,6 +8,19 @@ export async function createNotification({ userId, actorId, type, data = {} }) {
     data,
   });
   if (error) throw error;
+
+  // Notifica push vera (arriva anche ad app chiusa), in aggiunta a quella
+  // dentro l'app appena creata sopra. Va a buon fine solo se l'utente ha
+  // attivato le notifiche e questa categoria specifica; non deve mai far
+  // fallire l'azione principale se qualcosa va storto.
+  try {
+    let actorName;
+    if (actorId) {
+      const { data: actor } = await supabase.from('profiles').select('display_name, username').eq('id', actorId).maybeSingle();
+      actorName = actor?.display_name || actor?.username;
+    }
+    await supabase.functions.invoke('send-push', { body: { userId, type, actorName, data } });
+  } catch (e) {}
 }
 
 export async function listNotifications(userId) {

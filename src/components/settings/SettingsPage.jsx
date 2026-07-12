@@ -1,6 +1,6 @@
 import { useState, useRef } from 'react';
 import {
-  X, User, Palette, Globe, Bell, Shield, Lock, Database, Info, LifeBuoy, LogOut, Loader2, Send, CheckCircle2,
+  X, User, Palette, Globe, Bell, BellOff, Shield, Lock, Database, Info, LifeBuoy, LogOut, Loader2, Send, CheckCircle2, AlertTriangle,
 } from 'lucide-react';
 import SettingsSection from './SettingsSection.jsx';
 import { useBackHandler } from '../../hooks/useBackHandler.js';
@@ -15,6 +15,7 @@ import { useToast } from '../../contexts/ToastContext.jsx';
 import { supabase } from '../../lib/supabaseClient.js';
 import { upsertProfile } from '../../lib/profiles.js';
 import { sendFeedback } from '../../lib/feedback.js';
+import { isPushSupported, getPushPermissionState, enablePushNotifications, disablePushNotifications } from '../../lib/pushNotifications.js';
 import TmdbAttributionBadge from '../ui/TmdbAttributionBadge.jsx';
 
 const APP_VERSION = '2.0.0';
@@ -215,6 +216,10 @@ export default function SettingsPage({
             <ToggleRow label={t('settings.notifFriendRequests')} desc={t('settings.notifFriendRequestsDesc')} checked={notifPrefs.friend_requests} onChange={(v) => updateNotifPref('friend_requests', v)} />
             <ToggleRow label={t('settings.notifReviewLikes')} desc={t('settings.notifReviewLikesDesc')} checked={notifPrefs.review_likes} onChange={(v) => updateNotifPref('review_likes', v)} />
             <ToggleRow label={t('settings.notifFriendActivity')} desc={t('settings.notifFriendActivityDesc')} checked={notifPrefs.friend_activity} onChange={(v) => updateNotifPref('friend_activity', v)} last />
+
+            <div className="mt-5 pt-5" style={{ borderTop: '1px solid var(--border)' }}>
+              <PushNotificationSettings />
+            </div>
           </SettingsSection>
 
           <SettingsSection icon={Shield} title={t('settings.sectionPrivacy')} isOpen={open === 'privacy'} onToggle={() => toggleSection('privacy')}>
@@ -333,6 +338,93 @@ export default function SettingsPage({
           onCancel={() => setConfirmLogout(false)}
           onConfirm={() => { setConfirmLogout(false); logout(); }}
         />
+      )}
+    </div>
+  );
+}
+
+function PushNotificationSettings() {
+  const { t } = useI18n();
+  const { user, profile, refreshProfile } = useAuth();
+  const toast = useToast();
+  const [busy, setBusy] = useState(false);
+
+  const prefs = profile?.push_notification_prefs || { enabled: false };
+  const supported = isPushSupported();
+
+  const categories = [
+    { key: 'friend_request', label: t('settings.pushFriendRequest') },
+    { key: 'friend_accept', label: t('settings.pushFriendAccept') },
+    { key: 'new_follower', label: t('settings.pushNewFollower') },
+    { key: 'friend_review', label: t('settings.pushFriendReview') },
+    { key: 'review_like', label: t('settings.pushReviewLike') },
+    { key: 'review_comment', label: t('settings.pushReviewComment') },
+    { key: 'new_episode', label: t('settings.pushNewEpisode') },
+  ];
+
+  async function handleMasterToggle(next) {
+    setBusy(true);
+    try {
+      if (next) {
+        await enablePushNotifications(user.id);
+        await upsertProfile(user.id, { push_notification_prefs: { ...prefs, enabled: true } });
+      } else {
+        await disablePushNotifications();
+        await upsertProfile(user.id, { push_notification_prefs: { ...prefs, enabled: false } });
+      }
+      await refreshProfile();
+    } catch (e) {
+      if (e?.message === 'denied') toast.error(t('settings.pushPermissionDenied'));
+      else toast.error(t('common.somethingWrong'));
+    }
+    setBusy(false);
+  }
+
+  async function handleCategoryToggle(key, value) {
+    const next = { ...prefs, [key]: value };
+    try {
+      await upsertProfile(user.id, { push_notification_prefs: next });
+      refreshProfile();
+    } catch (e) { toast.error(t('common.somethingWrong')); }
+  }
+
+  if (!supported) {
+    return (
+      <div className="flex items-start gap-2.5 p-3 rounded-lg" style={{ background: 'var(--surface-alt)' }}>
+        <AlertTriangle size={15} style={{ color: 'var(--muted)', flexShrink: 0, marginTop: 1 }} />
+        <p className="font-body text-xs" style={{ color: 'var(--muted)' }}>{t('settings.pushUnsupported')}</p>
+      </div>
+    );
+  }
+
+  return (
+    <div>
+      <ToggleRow
+        label={t('settings.pushMasterLabel')}
+        desc={t('settings.pushMasterDesc')}
+        checked={!!prefs.enabled}
+        onChange={handleMasterToggle}
+        last={!prefs.enabled}
+      />
+      {busy && (
+        <div className="flex items-center gap-2 mt-2">
+          <Loader2 className="animate-spin" size={13} style={{ color: 'var(--muted)' }} />
+          <span className="font-mono text-xs" style={{ color: 'var(--muted)' }}>{t('common.loading')}</span>
+        </div>
+      )}
+      {prefs.enabled && (
+        <div className="mt-4 pt-4" style={{ borderTop: '1px solid var(--border)' }}>
+          <p className="font-mono text-xs mb-2" style={{ color: 'var(--muted)' }}>{t('settings.pushCategoriesLabel')}</p>
+          {categories.map((cat, i) => (
+            <ToggleRow
+              key={cat.key}
+              label={cat.label}
+              checked={prefs[cat.key] !== false}
+              onChange={(v) => handleCategoryToggle(cat.key, v)}
+              last={i === categories.length - 1}
+            />
+          ))}
+        </div>
       )}
     </div>
   );

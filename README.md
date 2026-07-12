@@ -110,6 +110,45 @@ Da ora ogni messaggio scritto nel modulo di supporto ti arriverà via email. Nes
 
 ---
 
+## 0.3 Notifiche push vere (facoltativo)
+
+Notifiche che arrivano sul dispositivo anche ad app chiusa (richiesta di amicizia, nuovo follower, mi piace, commenti...). Le chiavi qui sotto sono **già generate e pronte all'uso** — non devi crearle tu.
+
+1. Dal terminale (dopo aver già fatto `supabase login` e `supabase link` come sopra):
+   ```
+   supabase secrets set VAPID_PUBLIC_KEY=BFMqc_S0-XkRVdWJZVI-SdN-xiNp4I5FmbRiKhUCA91dDrZsWQX6e5tghOXiNw_63MX3eXCpxHCEawoUITOE9ro
+   supabase secrets set VAPID_PRIVATE_KEY=F_S1x03hbOYpV94WE8f3N9rW84WK78yfRGVF67AD6j4
+   ```
+2. Distribuisci la funzione:
+   ```
+   supabase functions deploy send-push
+   ```
+
+Da ora, attivando "Notifiche push" in Impostazioni → Notifiche, ogni utente riceverà davvero le notifiche sul dispositivo, rispettando le categorie che sceglie.
+
+> Su iPhone funziona solo se l'app è stata aggiunta alla schermata Home da Safari (Condividi → Aggiungi alla schermata Home) — aprirla da un semplice tab del browser non è sufficiente, è un limite di iOS, non di questa configurazione.
+
+---
+
+## 0.4 Avviso automatico "Nuovo episodio uscito" (facoltativo)
+
+Un controllo che gira da solo una volta al giorno, guarda tutte le serie in libreria a tutti gli utenti, e avvisa chi ha quella categoria attiva quando esce un nuovo episodio — anche ad app chiusa.
+
+1. Distribuisci la funzione:
+   ```
+   supabase functions deploy check-new-episodes
+   ```
+2. Apri `supabase-setup-v13.sql`, sostituisci `INCOLLA-QUI-LA-TUA-SERVICE-ROLE-KEY` con la tua vera Service Role Key (Supabase → Project Settings → API → "service_role" — **non** la "anon", è un'altra chiave, tienila segreta)
+3. Esegui lo script nel SQL Editor di Supabase
+
+Fatto: da ora un "orologio" lato server controlla da solo ogni giorno alle 8:00 (ora italiana ~9-10 a seconda del periodo dell'anno). Per verificare che sia partito correttamente, nel SQL Editor:
+```sql
+select * from cron.job;
+```
+Se vuoi testarlo subito senza aspettare il giorno dopo, puoi anche chiamare la funzione manualmente da Supabase → Edge Functions → check-new-episodes → "Invoke".
+
+---
+
 ## 1. Metti il progetto su GitHub (una volta sola)
 
 1. Crea un account gratuito su [github.com](https://github.com) se non ce l'hai già

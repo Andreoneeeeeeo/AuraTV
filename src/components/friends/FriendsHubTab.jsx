@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { UserPlus, Search, Loader2 } from 'lucide-react';
+import { UserPlus, UserCheck, Clock, Check, X, Search, Loader2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import Avatar from '../ui/Avatar.jsx';
 import FollowButton from '../profile/FollowButton.jsx';
@@ -10,13 +10,16 @@ import { SkeletonRows } from '../ui/Skeleton.jsx';
 import FriendsPage from './FriendsPage.jsx';
 import { useI18n } from '../../i18n/index.jsx';
 import { useAuth } from '../../contexts/AuthContext.jsx';
+import { useToast } from '../../contexts/ToastContext.jsx';
 import { followingActivity } from '../../lib/follows.js';
 import { toggleLike, getMyLikedReviewIds } from '../../lib/reviews.js';
 import { searchProfiles } from '../../lib/profiles.js';
+import { relationshipWith, sendFriendRequest, cancelFriendRequest, respondFriendRequest } from '../../lib/friends.js';
 
 export default function FriendsHubTab() {
   const { t } = useI18n();
   const { user } = useAuth();
+  const toast = useToast();
   const [segment, setSegment] = useState('activity');
   const [activity, setActivity] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -25,6 +28,7 @@ export default function FriendsHubTab() {
   const [query, setQuery] = useState('');
   const [searchResults, setSearchResults] = useState([]);
   const [searching, setSearching] = useState(false);
+  const [friendStatus, setFriendStatus] = useState({});
 
   useEffect(() => {
     if (segment !== 'activity') return;
@@ -43,7 +47,14 @@ export default function FriendsHubTab() {
     if (!query.trim()) { setSearchResults([]); return; }
     setSearching(true);
     const handle = setTimeout(() => {
-      searchProfiles(query, user.id).then(setSearchResults).catch(() => setSearchResults([])).finally(() => setSearching(false));
+      searchProfiles(query, user.id)
+        .then(async (results) => {
+          setSearchResults(results);
+          const entries = await Promise.all(results.map(async (p) => [p.id, await relationshipWith(user.id, p.id).catch(() => null)]));
+          setFriendStatus(Object.fromEntries(entries));
+        })
+        .catch(() => setSearchResults([]))
+        .finally(() => setSearching(false));
     }, 350);
     return () => clearTimeout(handle);
   }, [query, user.id]);
@@ -59,6 +70,65 @@ export default function FriendsHubTab() {
     try {
       await toggleLike(review.id, user.id, currentlyLiked, review.user_id, review.media_title);
     } catch (e) {}
+  }
+
+  async function handleSendRequest(targetId) {
+    try {
+      const row = await sendFriendRequest(user.id, targetId);
+      setFriendStatus((prev) => ({ ...prev, [targetId]: row }));
+    } catch (e) { toast.error(t('common.somethingWrong')); }
+  }
+
+  async function handleCancelRequest(targetId, requestId) {
+    try {
+      await cancelFriendRequest(requestId);
+      setFriendStatus((prev) => ({ ...prev, [targetId]: null }));
+    } catch (e) { toast.error(t('common.somethingWrong')); }
+  }
+
+  async function handleRespond(targetId, requestId, accept) {
+    try {
+      const row = await respondFriendRequest(requestId, accept, user.id);
+      setFriendStatus((prev) => ({ ...prev, [targetId]: row }));
+    } catch (e) { toast.error(t('common.somethingWrong')); }
+  }
+
+  function renderFriendAction(p) {
+    const rel = friendStatus[p.id];
+    if (rel === undefined) return null;
+    if (!rel) {
+      return (
+        <button onClick={() => handleSendRequest(p.id)} className="btn-press flex items-center gap-1.5 px-3 py-1.5 rounded-full font-body text-xs font-semibold"
+          style={{ background: 'var(--surface-alt)', color: 'var(--text)', border: '1px solid var(--border)' }}>
+          <UserPlus size={13} /> {t('friends.sendRequest')}
+        </button>
+      );
+    }
+    if (rel.status === 'accepted') {
+      return (
+        <span className="flex items-center gap-1.5 px-3 py-1.5 rounded-full font-body text-xs font-semibold" style={{ color: 'var(--watched)' }}>
+          <UserCheck size={13} /> {t('friends.alreadyFriends')}
+        </span>
+      );
+    }
+    if (rel.requester_id === user.id) {
+      return (
+        <button onClick={() => handleCancelRequest(p.id, rel.id)} className="btn-press flex items-center gap-1.5 px-3 py-1.5 rounded-full font-body text-xs font-semibold"
+          style={{ background: 'var(--surface-alt)', color: 'var(--muted)', border: '1px solid var(--border)' }}>
+          <Clock size={13} /> {t('friends.requestSent')}
+        </button>
+      );
+    }
+    return (
+      <div className="flex items-center gap-1.5">
+        <button onClick={() => handleRespond(p.id, rel.id, true)} aria-label={t('friends.accept')} className="btn-press flex items-center justify-center" style={{ width: 30, height: 30, borderRadius: '50%', background: 'var(--watched)' }}>
+          <Check size={14} color="var(--bg)" />
+        </button>
+        <button onClick={() => handleRespond(p.id, rel.id, false)} aria-label={t('friends.decline')} className="btn-press flex items-center justify-center" style={{ width: 30, height: 30, borderRadius: '50%', background: 'var(--surface-alt)', border: '1px solid var(--border)' }}>
+          <X size={14} style={{ color: 'var(--muted)' }} />
+        </button>
+      </div>
+    );
   }
 
   return (
@@ -82,15 +152,20 @@ export default function FriendsHubTab() {
         ) : (
           <div className="flex flex-col gap-2">
             {searchResults.map((p) => (
-              <div key={p.id} className="flex items-center gap-3 p-2.5 rounded-xl" style={{ background: 'var(--surface)' }}>
-                <Link to={`/profile/${p.username}`} className="flex items-center gap-3 flex-1 min-w-0">
-                  <Avatar url={p.avatar_url} name={p.display_name || p.username} size={40} />
-                  <div className="min-w-0">
-                    <p className="font-body text-sm font-semibold truncate">{p.display_name || p.username}</p>
-                    <p className="font-mono text-xs truncate" style={{ color: 'var(--muted)' }}>@{p.username}</p>
-                  </div>
-                </Link>
-                <FollowButton targetUserId={p.id} targetName={p.display_name || p.username} />
+              <div key={p.id} className="flex flex-col gap-2.5 p-2.5 rounded-xl" style={{ background: 'var(--surface)' }}>
+                <div className="flex items-center gap-3">
+                  <Link to={`/profile/${p.username}`} className="flex items-center gap-3 flex-1 min-w-0">
+                    <Avatar url={p.avatar_url} name={p.display_name || p.username} size={40} />
+                    <div className="min-w-0">
+                      <p className="font-body text-sm font-semibold truncate">{p.display_name || p.username}</p>
+                      <p className="font-mono text-xs truncate" style={{ color: 'var(--muted)' }}>@{p.username}</p>
+                    </div>
+                  </Link>
+                  <FollowButton targetUserId={p.id} targetName={p.display_name || p.username} />
+                </div>
+                <div className="flex justify-end" style={{ borderTop: '1px solid var(--border)', paddingTop: 8 }}>
+                  {renderFriendAction(p)}
+                </div>
               </div>
             ))}
           </div>

@@ -8,9 +8,9 @@ import DiscoverTab from './components/tabs/DiscoverTab.jsx';
 import GamesTab from './components/tabs/GamesTab.jsx';
 import FriendsHubTab from './components/friends/FriendsHubTab.jsx';
 import ProfilePage from './components/profile/ProfilePage.jsx';
-import GamesOnboarding from './components/onboarding/GamesOnboarding.jsx';
-import TvTimeImportPrompt from './components/onboarding/TvTimeImportPrompt.jsx';
-import { hasSeenTvTimePrompt, markTvTimePromptSeen } from './lib/tvTimePrompt.js';
+import OnboardingFlow from './components/onboarding/OnboardingFlow.jsx';
+import { hasSeenTvTimePrompt } from './lib/tvTimePrompt.js';
+import { hasSeenPushOnboarding } from './lib/pushOnboardingSetting.js';
 import { listFollowers, listFollowing } from './lib/follows.js';
 import ConfettiBurst from './components/ui/ConfettiBurst.jsx';
 import { useToast } from './contexts/ToastContext.jsx';
@@ -61,7 +61,7 @@ export default function TVTracker() {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [mainScrolled, setMainScrolled] = useState(false);
   const mainRef = useRef(null);
-  const [showTvTimePrompt, setShowTvTimePrompt] = useState(() => !hasSeenTvTimePrompt());
+  const [onboardingDismissed, setOnboardingDismissed] = useState(false);
   const [editingProfile, setEditingProfile] = useState(false);
   const [statsOpen, setStatsOpen] = useState(false);
   const [followListPanel, setFollowListPanel] = useState(null);
@@ -198,29 +198,18 @@ export default function TVTracker() {
     setPreviewGame(null);
   }
 
-  async function handleGamesOnboardingAnswer(answer) {
-    if (!user) return;
-    try {
-      await upsertProfile(user.id, { tracks_games: answer });
-      await refreshProfile();
-      if (answer) setTab('games');
-    } catch (e) {}
-  }
-
-  function dismissTvTimePrompt() {
-    markTvTimePromptSeen();
-    setShowTvTimePrompt(false);
-  }
-
   async function openFollowListPanel(kind) {
     setFollowListPanel(kind);
     const data = kind === 'followers' ? await listFollowers(user.id) : await listFollowing(user.id);
     setFollowListData(data);
   }
 
-  function goToImportFromTvTimePrompt() {
-    dismissTvTimePrompt();
-    setSettingsOpen(true);
+  const showOnboarding = !onboardingDismissed && !!profile && (
+    !hasSeenPushOnboarding() || !hasSeenTvTimePrompt() || profile.tracks_games === null || profile.tracks_games === undefined
+  );
+
+  function handleOnboardingDone() {
+    setOnboardingDismissed(true);
   }
 
   const detailShow = detailId ? (data.library[detailId] || previewShow) : null;
@@ -333,12 +322,12 @@ export default function TVTracker() {
 
       {celebrating && <ConfettiBurst onDone={() => setCelebrating(false)} />}
 
-      {showTvTimePrompt ? (
-        <TvTimeImportPrompt onOpenSettings={goToImportFromTvTimePrompt} onDismiss={dismissTvTimePrompt} />
-      ) : (
-        profile && profile.tracks_games === null && (
-          <GamesOnboarding onAnswer={handleGamesOnboardingAnswer} />
-        )
+      {showOnboarding && (
+        <OnboardingFlow
+          onDone={handleOnboardingDone}
+          onOpenSettings={() => setSettingsOpen(true)}
+          onEnableGames={() => setTab('games')}
+        />
       )}
 
       {detailShow && (
