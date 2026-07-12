@@ -2,7 +2,6 @@ import { useState, useEffect, useRef, lazy, Suspense } from 'react';
 import { Loader2, AlertCircle, X } from 'lucide-react';
 import Header from './components/layout/Header.jsx';
 import BottomNav from './components/layout/BottomNav.jsx';
-import SideNav from './components/layout/SideNav.jsx';
 import Centered from './components/shared/Centered.jsx';
 import LibraryTab from './components/tabs/LibraryTab.jsx';
 import DiscoverTab from './components/tabs/DiscoverTab.jsx';
@@ -22,6 +21,7 @@ import { useBackHandler } from './hooks/useBackHandler.js';
 import { upsertProfile } from './lib/profiles.js';
 import { getAutoPauseMonths, setAutoPauseMonths } from './lib/autoPauseSetting.js';
 import { getCollapsedSections, setCollapsedSections } from './lib/collapsedSectionsSetting.js';
+import { getLibraryViewMode, setLibraryViewMode } from './lib/libraryViewSetting.js';
 import { computeAutoPauseUpdates } from './lib/watchStatus.js';
 
 const ShowDetail = lazy(() => import('./components/show/ShowDetail.jsx'));
@@ -68,6 +68,7 @@ export default function TVTracker() {
   const [followListData, setFollowListData] = useState([]);
   const [autoPauseMonths, setAutoPauseMonthsState] = useState(getAutoPauseMonths);
   const [collapsedSections, setCollapsedSectionsState] = useState(getCollapsedSections);
+  const [libraryViewMode, setLibraryViewModeState] = useState(getLibraryViewMode);
 
   const data = useLibraryData({
     apiKey, lang, t, setError, setImportProgress, userId: user?.id,
@@ -140,6 +141,22 @@ export default function TVTracker() {
       if (user) upsertProfile(user.id, { collapsed_library_sections: next }).catch(() => toast.error(t('settings.syncSaveFailed')));
       return next;
     });
+  }
+
+  const libraryViewSynced = useRef(false);
+  useEffect(() => {
+    if (!profile || libraryViewSynced.current) return;
+    libraryViewSynced.current = true;
+    if (profile.library_view_mode) {
+      setLibraryViewMode(profile.library_view_mode);
+      setLibraryViewModeState(profile.library_view_mode);
+    }
+  }, [profile]);
+
+  function handleSetLibraryViewMode(mode) {
+    setLibraryViewMode(mode);
+    setLibraryViewModeState(mode);
+    if (user) upsertProfile(user.id, { library_view_mode: mode }).catch(() => toast.error(t('settings.syncSaveFailed')));
   }
 
   const [previewShow, setPreviewShow] = useState(null);
@@ -234,6 +251,7 @@ export default function TVTracker() {
           lists={data.lists} onCreateList={data.createList} onDeleteList={data.deleteList} onRemoveFromList={data.removeFromList} onUpdateListMeta={data.updateListMeta}
           apiKey={apiKey} setError={setError} onToggleEpisode={data.toggleEpisode}
           collapsedSections={collapsedSections} onToggleSection={handleToggleSection}
+          libraryViewMode={libraryViewMode} onSetLibraryViewMode={handleSetLibraryViewMode}
         />
       );
     }
@@ -270,8 +288,6 @@ export default function TVTracker() {
 
   return (
     <div className="app-shell font-body flex flex-col md:flex-row">
-      <SideNav tab={tab} setTab={setTab} showGames={showGames} />
-
       <div className="flex-1 flex flex-col min-w-0">
         <Header tab={tab} onOpenProfile={() => setTab('profile')} scrolled={mainScrolled} />
 
@@ -302,7 +318,7 @@ export default function TVTracker() {
 
         <main
           ref={mainRef}
-          className="flex-1 overflow-y-auto px-4 pb-24 md:pb-8 pt-4"
+          className="flex-1 overflow-y-auto px-4 pb-24 pt-4"
           style={{ maxWidth: 720, margin: '0 auto', width: '100%' }}
           onScroll={(e) => {
             const isScrolled = e.currentTarget.scrollTop > 8;

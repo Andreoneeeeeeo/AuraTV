@@ -28,7 +28,7 @@ export default function BottomNav({ tab, setTab, showGames }) {
   return (
     <nav
       aria-label="Navigazione principale"
-      className="fixed left-0 right-0 flex justify-center md:hidden"
+      className="fixed left-0 right-0 flex justify-center"
       style={{ bottom: 'calc(10px + env(safe-area-inset-bottom, 0px))', zIndex: 20, paddingInline: 12 }}
     >
       <div

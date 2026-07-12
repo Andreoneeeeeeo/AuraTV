@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { Tv, List, LayoutGrid, ChevronDown } from 'lucide-react';
 import Poster from '../shared/Poster.jsx';
 import EmptyState from '../shared/EmptyState.jsx';
@@ -8,9 +7,8 @@ import { getShowWatchStatus, isShowCaughtUp } from '../../lib/watchStatus.js';
 
 const SECTION_ORDER = ['watching', 'caught_up', 'planned', 'on_hold', 'completed', 'dropped'];
 
-export default function SeriesLibrary({ library, watchedCountForShow, onOpen, collapsed = [], onToggleSection }) {
+export default function SeriesLibrary({ library, watchedCountForShow, onOpen, collapsed = [], onToggleSection, view = 'grid', onSetView }) {
   const { t } = useI18n();
-  const [view, setView] = useState('grid');
   const collapsedSet = new Set(collapsed);
   const shows = Object.values(library).sort((a, b) => (b.lastWatchedAt || b.addedAt) - (a.lastWatchedAt || a.addedAt));
   if (shows.length === 0) {
@@ -42,7 +40,7 @@ export default function SeriesLibrary({ library, watchedCountForShow, onOpen, co
     <div>
       <div className="flex justify-end mb-3">
         <button
-          onClick={() => setView(v => v === 'grid' ? 'list' : 'grid')}
+          onClick={() => onSetView(view === 'grid' ? 'list' : 'grid')}
           aria-label={t('library.toggleView')}
           className="btn-press flex items-center gap-1.5 px-3 py-1.5 rounded-full font-mono"
           style={{ background: 'var(--surface)', border: '1px solid var(--border)', fontSize: 11, color: 'var(--muted)' }}

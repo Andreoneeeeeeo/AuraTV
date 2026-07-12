@@ -8,7 +8,7 @@ import { useI18n } from '../../i18n/index.jsx';
 
 export default function LibraryTab({
   library, watchedCountForShow, onOpen, filmLibrary, onOpenFilm, lists, onCreateList, onDeleteList, onRemoveFromList, onUpdateListMeta,
-  apiKey, setError, onToggleEpisode, collapsedSections, onToggleSection,
+  apiKey, setError, onToggleEpisode, collapsedSections, onToggleSection, libraryViewMode, onSetLibraryViewMode,
 }) {
   const { t } = useI18n();
   const [segment, setSegment] = useState('palinsesto');
@@ -30,6 +30,7 @@ export default function LibraryTab({
         <SeriesLibrary
           library={library} watchedCountForShow={watchedCountForShow} onOpen={onOpen}
           collapsed={collapsedSections?.series || []} onToggleSection={(key) => onToggleSection('series', key)}
+          view={libraryViewMode} onSetView={onSetLibraryViewMode}
         />
       )}
       {segment === 'film' && (
